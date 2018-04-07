@@ -1,0 +1,66 @@
+ctest
+=======
+
+`ctest` is a minimalist testing framework inspired by the Golang
+testing pkg. This small C library attempts to provide a consistent API
+for creating, running, and checking the results of tests. There is very
+little boilerplate required in the main function.
+
+
+Example program
+---------------
+
+    #include <stdlib.h>
+    #include "ctest.h"
+
+    int main(int argc, char* argv[]) {
+        // create test suite
+        suite_t* s = suite_init();
+        
+        // initalize tests
+        // variadic func; add as many tests as needed
+        suite_add(s, 2, newtest("test_func1", &test_func1),
+                  newtest("test_func2", &test_func2)); 
+
+        // run the test suite
+        suite_run(s);
+        stats = suite_stats(s);
+        suite_del(s);
+        ...
+
+        return stats.n_error
+    }
+
+    void test_func1(test_t* t) {
+        ...
+
+        test_done(t);
+        return;
+    }
+    ...
+
+
+Conventions
+-----------
+
+Every testing function is defined as a `void test_myfunc(test_t* t)`
+where the parameter `t` records information about the test, including
+failure and error states, and start and end times of each test. The end
+of a test is signified by `test_done(t)`, but this call is completely
+optional if only testing for correctness and not speed.
+
+
+Bugs and future development
+---------------------------
+
+Currently this library only runs tests synchronously and lacks the
+ability to kill tests and run them in parallel.
+
+
+License information
+-------------------
+
+Copyright (c) 2018 Keefer Rourke <mail@krourke.org>
+
+This software is released under the ISC License. See LICENSE for more
+details.
