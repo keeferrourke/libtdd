@@ -1,7 +1,7 @@
 /* main.c
  *
- * Example program demonstrating ctest.
- * This program uses all the features of the library.
+ * Example program demonstrating libctest usage.
+ * This program uses all the public features of the library.
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -19,8 +19,13 @@ int main(int argc, char* argv[]) {
 
     // suite_add is a variadic function that can be used to add an arbitrary
     // number of tests at once
-    suite_add(s, 2, newtest(&test_timer, "test_timer", "Explicit benchmark."),
-              newtest(&bench_func, "bench_func", "Implicit benchmark."));
+    suite_add(s, 2,
+              newtest(&test_timer, "test_timer",
+                      "Manual benchmark. Requires timespan to printed "
+                      "manually."),
+              newtest(&bench_func, "bench_func",
+                      "Builtin benchmark. Execution timespan is printed "
+                      "automatically below."));
     // suite_addtest is a function that simply appends a test to the list of
     // tests in the suite; could be used to programmatically add tests
     suite_addtest(

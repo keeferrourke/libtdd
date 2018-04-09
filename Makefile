@@ -66,7 +66,7 @@ endif
 
 # automatically compile all objects
 $(OBJDIR)/%.o: $(SRCDIR)/%.c $(OBJDIR)
-	@$(CC) $(CFLAGS) $(INCLUDE) -fpic -c $< -o $@
+	$(CC) $(CFLAGS) $(INCLUDE) -fpic -c $< -o $@
 
 # the following targets simply ensure that the expected directories exist
 $(OBJDIR):

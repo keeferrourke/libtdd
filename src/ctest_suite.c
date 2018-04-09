@@ -1,9 +1,9 @@
 /**
- * @file ctest_test.c
+ * @file ctest_suite.c
  * @author Keefer Rourke <mail@krourke.org>
- * @date 08 Jan 2018
+ * @date 08 Apr 2018
  * @brief This file contains implementation details of functions pertaining to
- *        using test_t structures for managing simple test suites.
+ *        using suite_t structures for managing simple test suites.
  **/
 #include <errno.h>
 #include <stdarg.h>
@@ -15,6 +15,7 @@
 
 #include "ctest.h"
 #include "ctest_strutil.h"
+#include "ctest_timeutil.h"
 
 suite_t* suite_init() {
     suite_t* s = malloc(sizeof(suite_t));
@@ -148,11 +149,21 @@ int suite_next(suite_t* s, bool fatal_failures) {
     if (s == NULL) return EXIT_FAILURE;
 
     /* set up test */
-    test_t* t    = test_t_init();
-    testfn* test = s->tests[s->test_index];
+    test_t* t     = test_t_init();
+    testfn* test  = s->tests[s->test_index];
+    bool    bench = false;
+    if (__hasprefix(test->name, "bench_")) {
+        bench = true;
+    }
 
     /* run test */
+    if (bench) {
+        test_start(t);
+    }
     test->fn(t);
+    if (bench && t->end->tv_sec == 0 && t->end->tv_nsec == 0) {
+        test_done(t);
+    }
     int left = (s->n_tests) - (s->test_index + 1);
 
     /* keep record of test results */
@@ -190,6 +201,20 @@ int suite_next(suite_t* s, bool fatal_failures) {
         fprintf(stdout, "\n");
     }
     free(res);
+
+    /* print benchmarking info */
+    if (bench) {
+        struct timespec tdiff = __timespec_minus(t->end, t->start);
+
+        char* bench_info = calloc(64 + strlen(test->name), sizeof(char));
+        sprintf(bench_info, "      bench: test (%s) took ", test->name);
+        __print_desc(stdout, bench_info);
+        char* bench_res = calloc(256, sizeof(char));
+        sprintf(bench_res, "%lds %ldns\n", tdiff.tv_sec, tdiff.tv_nsec);
+        __print_hilite(stdout, bench_res);
+        free(bench_info);
+        free(bench_res);
+    }
 
     return ret;
 }

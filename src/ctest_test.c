@@ -1,7 +1,7 @@
 /**
- * @file ctest_test.c
+ * @file ctest_testfn.c
  * @author Keefer Rourke <mail@krourke.org>
- * @date 08 Jan 2018
+ * @date 08 Apr 2018
  * @brief This file contains implementation details of functions pertaining to
  *        using test_t structures for managing simple test suites.
  **/
@@ -90,13 +90,13 @@ void test_error(test_t* t, char* msg) {
 }
 
 void test_start(test_t* t) {
-    timespec_get(t->end, TIME_UTC);
+    timespec_get(t->start, TIME_UTC);
 
     return;
 }
 
 void test_done(test_t* t) {
-    timespec_get(t->start, TIME_UTC);
+    timespec_get(t->end, TIME_UTC);
 
     return;
 }

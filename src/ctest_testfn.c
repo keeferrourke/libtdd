@@ -1,9 +1,9 @@
 /**
  * @file ctest.c
  * @author Keefer Rourke <mail@krourke.org>
- * @date 08 Jan 2018
+ * @date 08 Apr 2018
  * @brief This file contains implementation details of functions pertaining to
- *        using test_t structures for managing simple test suites.
+ *        using testfn structures for creating simple test suites.
  **/
 #include <errno.h>
 #include <stdarg.h>

@@ -29,9 +29,10 @@
 #define ERROR TEXT_RESET TEXT_BOLD TEXT_RED
 #define WARNING TEXT_RESET TEXT_YELLOW
 #define DESCRIBE TEXT_RESET TEXT_DIM
+#define ATTENTION TEXT_RESET TEXT_CYAN
 
 #else
-/* not using colour, so define macros as empty strings */
+/* not using colour, so define macros as empty strings to nullify effect */
 #define TEXT_RESET ""
 #define TEXT_RED ""
 #define TEXT_GREEN ""
@@ -47,6 +48,7 @@
 #define ERROR ""
 #define WARNING ""
 #define DESCRIBE ""
+#define ATTENTION ""
 
 #endif
 
@@ -72,19 +74,29 @@ int __hasprefix(char* str, char* pre) {
 void __print_error(FILE* f, char* str) {
     if (f == NULL || str == NULL) return;
     fprintf(f, ERROR "%s" TEXT_RESET, str);
+    return;
 }
 
 void __print_warning(FILE* f, char* str) {
     if (f == NULL || str == NULL) return;
     fprintf(f, WARNING "%s" TEXT_RESET, str);
+    return;
 }
 
 void __print_success(FILE* f, char* str) {
     if (f == NULL || str == NULL) return;
     fprintf(f, SUCCESS "%s" TEXT_RESET, str);
+    return;
 }
 
 void __print_desc(FILE* f, char* str) {
     if (f == NULL || str == NULL) return;
     fprintf(f, DESCRIBE "%s" TEXT_RESET, str);
+    return;
+}
+
+void __print_hilite(FILE* f, char* str) {
+    if (f == NULL || str == NULL) return;
+    fprintf(f, ATTENTION "%s" TEXT_RESET, str);
+    return;
 }

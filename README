@@ -9,9 +9,8 @@ little boilerplate required in the main function.
 Features
 --------
 
- * Simple API for test suite creation using TDD semantics
- * Test and subtest creation
- * Benchmarking
+ * Easy API for test suite creation and execution using TDD semantics
+ * Simple benchmarking
  * Summary statistics
 
 Build and usage
@@ -20,7 +19,13 @@ Build and usage
 The Makefile included with this project creates static and dynamic
 libraries in the `lib/` directory. To build this, simply run:
 
-    make lib
+    make lib    # libctest.a
+    make dylib  # libctest.so (or libctest.dylib on Darwin)
+
+Colour output support can be enabled at compile time by including the
+`DEFINE=-DUSE_COLOUR` directive on the `make` line. ex.
+
+    make dylib DEFINE=-DUSE_COLOUR  # enables pretty colour printing
 
 You can then include the outputted `libctest.so` or `libctest.a` in your
 project as is required.
@@ -34,34 +39,14 @@ See the Makefile for other relevant build targets.
 Example program
 ---------------
 
-    #include <stdlib.h>
-    #include "ctest.h"
+A simple example program that demonstrates all features provided by this
+library can be found in the `examples/` directory of this project.
 
-    void test_func1(test_t* t) {
-        ...
-
-        test_done(t);
-        return;
-    }
-    ...
-
-    int main(int argc, char* argv[]) {
-        // create test suite
-        suite_t* s = suite_init();
-        
-        // initalize tests
-        // variadic func; add as many tests as needed
-        suite_add(s, 2, newtest("test_func1", &test_func1),
-                  newtest("test_func2", &test_func2)); 
-
-        // run the test suite
-        suite_run(s);
-        stats = suite_stats(s);
-        suite_del(s);
-        ...
-
-        return stats.n_error
-    }
+It can be compiled and run as follows:
+    
+    make lib
+    gcc -o ctest_example -Iinclude examples/main.c -Llib -lctest
+    ./ctest_example
 
 
 Conventions
