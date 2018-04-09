@@ -1,6 +1,7 @@
 *.sw[a-p]
 *.o
 a.out
+vgcore.*
 docs/*
 lib/*
 obj/*
