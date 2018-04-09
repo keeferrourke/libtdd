@@ -6,12 +6,44 @@ testing pkg. This small C library attempts to provide a consistent API
 for creating, running, and checking the results of tests. There is very
 little boilerplate required in the main function.
 
+Features
+--------
+
+ * Simple API for test suite creation using TDD semantics
+ * Test and subtest creation
+ * Benchmarking
+ * Summary statistics
+
+Build and usage
+---------------
+
+The Makefile included with this project creates static and dynamic
+libraries in the `lib/` directory. To build this, simply run:
+
+    make lib
+
+You can then include the outputted `libctest.so` or `libctest.a` in your
+project as is required.
+
+API documentation can be compiled with Doxygen and LaTeX via:
+
+    make docs
+
+See the Makefile for other relevant build targets.
 
 Example program
 ---------------
 
     #include <stdlib.h>
     #include "ctest.h"
+
+    void test_func1(test_t* t) {
+        ...
+
+        test_done(t);
+        return;
+    }
+    ...
 
     int main(int argc, char* argv[]) {
         // create test suite
@@ -31,23 +63,45 @@ Example program
         return stats.n_error
     }
 
-    void test_func1(test_t* t) {
-        ...
-
-        test_done(t);
-        return;
-    }
-    ...
-
 
 Conventions
 -----------
 
+### Testing
+
 Every testing function is defined as a `void test_myfunc(test_t* t)`
 where the parameter `t` records information about the test, including
-failure and error states, and start and end times of each test. The end
-of a test is signified by `test_done(t)`, but this call is completely
+failure and error states, and start and end times of each test.
+
+The start of a test is signified by `test_start(t)` and the end
+of a test is signified by `test_done(t)`, but these calls are completely
 optional if only testing for correctness and not speed.
+
+
+### Benchmarking
+
+If benchmarking, then for convenience, the `test_start(t)` and
+`test_done(t)` function calls may be omitted within a test body if the
+test name is prefixed by `bench_`. These times will be automatically
+recorded by the suite.
+
+Calls to `test_start(t)` and `test_done(t)` may still be made to
+override the start and end times if the benchmarks require setup and
+teardown code that should not be included in the recorded time.
+
+i.e. a benchmarking function may be simply defined as
+
+    void bench_func(test_t* t) {
+        ...
+        return;
+    }
+
+and can be added to a test suite as a benchmarking function by
+
+    suite_addtest(s, newtest("bench_one", &bench_func));
+
+After execution of each benchmark function, a short summary of runtime
+is printed.
 
 
 Bugs and future development
@@ -55,6 +109,10 @@ Bugs and future development
 
 Currently this library only runs tests synchronously and lacks the
 ability to kill tests and run them in parallel.
+
+ * In the future, it may be nice if `test_fail()` sent a signal to the
+   suite indicating that the test process should be terminated early,
+   instead of requiring an explicit return.
 
 
 License information

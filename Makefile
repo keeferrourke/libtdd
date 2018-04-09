@@ -5,10 +5,13 @@
 # Libraries are output to $PWD/lib
 #
 # See LICENSE file included at the project root.
- 
+
 # specify the shell, in case the SHELL variable is not set or is not
 # inherited from the environment
 SHELL = /bin/bash
+
+# determine platform
+UNAME = $(shell uname -s)
 
 # set suffix list, to prevent confusion between different make programs
 # line 15 clears an implied suffix list, and line 16 sets a new one
@@ -26,8 +29,8 @@ OUTDIR	= $(WD)/lib
 
 # DOCDIR and TEXDIR must match the appropriate directories specified in the
 # Doxyfile; TEXDIR is a subdirectory of DOCDIR
-DOCDIR = docs/
-TEXDIR = latex/
+DOCDIR = docs
+TEXDIR = latex
 
 # library output
 _LIB	= libctest
@@ -40,18 +43,26 @@ _OBJS	= $(patsubst $(SRCDIR)/%.c, %.o, $(SRC))
 OBJS	= $(addprefix $(OBJDIR)/, $(_OBJS))
 
 # compilation flags
-CFLAGS	= -Wall -std=c99 -pedantic -g
+CFLAGS	= -Wall -std=c11 -pedantic -g $(DEFINE)
 INCLUDE = -I$(INCLDIR)
 
-.PHONY: all lib
+.PHONY: all lib dylib
 
 # this target compiles the final library binaries and generates documentation
-all: lib docs docs-clean
+all: lib dylib doc doc-clean
 
 lib: $(OBJS) $(OUTDIR)
-	@$(CC) -shared -o $(LIB).so $<
-	@$(AR) crs $(LIB).a $<
-	@echo "Compiled libctest to $(OUTDIR)"
+	@$(AR) crs $(LIB).a $(OBJS)
+	@echo "Compiled libctest.a to $(OUTDIR)"
+
+dylib: $(OBJS) $(OUTDIR)
+ifeq ($(UNAME),Darwin)
+	@$(CC) -shared -o $(LIB).dylib $(OBJS)
+	@echo "Compiled libctest.dylib to $(OUTDIR)"
+else
+	@$(CC) -shared -o $(LIB).so $(OBJS)
+	@echo "Compiled libctest.so to $(OUTDIR)"
+endif
 
 # automatically compile all objects
 $(OBJDIR)/%.o: $(SRCDIR)/%.c $(OBJDIR)
@@ -63,24 +74,24 @@ $(OBJDIR):
 
 $(OUTDIR):
 	@mkdir -p $(OUTDIR)
- 
+
 # generate docs with doxygen
 # this is intended to be used with a Doxyfile that specified LaTeX output
 # modify as required for different documentation formats
 #
 # inelegant, but if doxygen fails for some reason, it is not the end of the
 # world
-.PHONY: docs docs-clean
-docs: Doxyfile
+.PHONY: doc doc-clean
+doc: Doxyfile
 	 @doxygen 2>/dev/null 1>&2
 	-@echo 'Generating application internal documentation...'
 #	generate PDF from LaTeX sources
-	-@cd $(DOCDIR)$(TEXDIR) && $(MAKE) 2>/dev/null 1>&2
-	-@mv $(DOCDIR)$(TEXDIR)refman.pdf $(DOCDIR)
+	-@cd $(DOCDIR)/$(TEXDIR) && $(MAKE) 2>/dev/null 1>&2
+	-@mv $(DOCDIR)/$(TEXDIR)refman.pdf $(DOCDIR)
 	-@echo 'Generated application internal documentation.'
 
-docs-clean:
-	@cd $(DOCDIR)$(TEXDIR) && $(MAKE) clean
+doc-clean:
+	-@rm -r $(DOCDIR)/$(TEXDIR)
 
 $(DOCDIR):
 	@mkdir -p $(DOCDIR)
@@ -101,6 +112,6 @@ cppcheck:
 		$(SRC) -i $(INCLDIR)
 
 # print target; useful for debugging this Makefile
-print-% :
+print-%:
 	@echo $($*)
 
