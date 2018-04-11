@@ -6,6 +6,8 @@
  *        using test_t structures for managing simple test suites.
  **/
 #include <errno.h>
+#include <pthread.h>
+#include <signal.h>
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -66,7 +68,8 @@ void test_fail(test_t* t, char* msg) {
     t->fail_msg = calloc(strlen(msg) + 1, sizeof(char));
     strncpy(t->fail_msg, msg, strlen(msg));
 
-    timespec_get(t->failed_at, TIME_UTC);
+    clock_gettime(CLOCK_MONOTONIC, t->failed_at);
+    pthread_cancel(pthread_self());
 
     return;
 }
@@ -84,19 +87,19 @@ void test_error(test_t* t, char* msg) {
     t->err_msg[t->err - 1] = calloc(strlen(msg) + 1, sizeof(char));
     strncpy(t->err_msg[t->err - 1], msg, strlen(msg));
 
-    timespec_get(t->error_at, TIME_UTC);
+    clock_gettime(CLOCK_MONOTONIC, t->error_at);
 
     return;
 }
 
 void test_start(test_t* t) {
-    timespec_get(t->start, TIME_UTC);
+    clock_gettime(CLOCK_MONOTONIC, t->start);
 
     return;
 }
 
 void test_done(test_t* t) {
-    timespec_get(t->end, TIME_UTC);
+    clock_gettime(CLOCK_MONOTONIC, t->end);
 
     return;
 }

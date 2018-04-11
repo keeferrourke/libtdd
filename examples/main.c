@@ -3,16 +3,18 @@
  * Example program demonstrating libctest usage.
  * This program uses all the public features of the library.
  */
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "ctest.h"
 
-static void test_errfunc(test_t* t);
-static void test_failfunc(test_t* t);
-static void test_timer(test_t* t);
-static void bench_func(test_t* t);
+static void* test_errfunc(void* t);
+static void* test_failfunc(void* t);
+static void* test_timer(void* t);
+static void* bench_func(void* t);
+static void* test_segvfunc(void* t);
 
 int main(int argc, char* argv[]) {
     suite_t* s = suite_init();
@@ -32,8 +34,9 @@ int main(int argc, char* argv[]) {
         s, newtest(&test_errfunc, "test_errfunc", "Produces an error."));
     // suite_add can be called multiple times to add groups of tests to the
     // test suite
-    suite_add(s, 1,
-              newtest(&test_failfunc, "test_failfunc", "Fails immediately."));
+    suite_add(s, 2,
+              newtest(&test_failfunc, "test_failfunc", "Fails immediately."),
+              newtest(&test_segvfunc, "test_segvfunc", "Raised SIGSEGV."));
 
     printf("Running tests ignoring failures.\n");
     suite_run(s, false);
@@ -58,6 +61,7 @@ int main(int argc, char* argv[]) {
 
     // print summary statistics
     suite_stats_t* stats = suite_stats(s);
+    printf("Suite encountered: %d segmentation faults.\n", s->n_segv);
 
     // delete the suite and all testfns associated with it
     suite_del(s);
@@ -68,28 +72,34 @@ int main(int argc, char* argv[]) {
     return ret;
 }
 
-void test_errfunc(test_t* t) {
+void* test_errfunc(void* t) {
     test_error(t, "a non-critical error ocurred.");
-    return;
+    return t;
 }
 
-void test_failfunc(test_t* t) {
+void* test_failfunc(void* t) {
     test_fail(t, "a critical error occurred!");
-    return;
+    printf("this code should not run!\n");
+    return t;
 }
 
-void test_timer(test_t* t) {
+void* test_timer(void* t) {
     test_start(t);
     char* s = calloc(128, sizeof(char));
     strcpy(s, "This function is being timed!");
     free(s);
     test_done(t);
-    return;
+    return t;
 }
 
-void bench_func(test_t* t) {
+void* bench_func(void* t) {
     char* s = calloc(128, sizeof(char));
     strcpy(s, "This function is being timed!");
     free(s);
-    return;
+    return t;
+}
+
+void* test_segvfunc(void* t) {
+    raise(SIGSEGV);
+    return t;
 }

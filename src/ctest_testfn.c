@@ -15,7 +15,7 @@
 
 #include "ctest.h"
 
-testfn* newtest(void (*f)(test_t* t), char* name, char* desc) {
+testfn* newtest(void* (*f)(void* t), char* name, char* desc) {
     if (name == NULL || desc == NULL || f == NULL) {
         return NULL;
     }
