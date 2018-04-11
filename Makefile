@@ -18,6 +18,12 @@ UNAME = $(shell uname -s)
 .SUFFIXES:
 .SUFFIXES: .c .h .o
 
+# this library conforms to the C99 standard with POSIX_C_SOURCE
+# POSIX_C_SOURCE is defined in order to use the safer sigaction interface for
+# signal handling, to expose pthread_kill, and to enable clock_gettime() which
+# is used to populate timespec structs
+STD = -std=c99 -D_POSIX_C_SOURCE=199506L
+
 # library project structure
 CC	= gcc
 AR	= ar
@@ -43,13 +49,13 @@ _OBJS	= $(patsubst $(SRCDIR)/%.c, %.o, $(SRC))
 OBJS	= $(addprefix $(OBJDIR)/, $(_OBJS))
 
 # compilation flags
-CFLAGS	= -Wall -std=c11 -pedantic -g $(DEFINE)
+CFLAGS	= -Wall -pedantic -g $(STD) -pthread $(DEFINE)
 INCLUDE = -I$(INCLDIR)
 
 .PHONY: all lib dylib
 
 # this target compiles the final library binaries and generates documentation
-all: lib dylib doc doc-clean
+all: lib dylib doc
 
 lib: $(OBJS) $(OUTDIR)
 	@$(AR) crs $(LIB).a $(OBJS)
@@ -87,7 +93,7 @@ doc: Doxyfile
 	-@echo 'Generating application internal documentation...'
 #	generate PDF from LaTeX sources
 	-@cd $(DOCDIR)/$(TEXDIR) && $(MAKE) 2>/dev/null 1>&2
-	-@mv $(DOCDIR)/$(TEXDIR)refman.pdf $(DOCDIR)
+	-@mv $(DOCDIR)/$(TEXDIR)/refman.pdf $(DOCDIR)
 	-@echo 'Generated application internal documentation.'
 
 doc-clean:

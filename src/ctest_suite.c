@@ -6,6 +6,8 @@
  *        using suite_t structures for managing simple test suites.
  **/
 #include <errno.h>
+#include <pthread.h>
+#include <signal.h>
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -14,6 +16,7 @@
 #include <time.h>
 
 #include "ctest.h"
+#include "ctest_signals.h"
 #include "ctest_strutil.h"
 #include "ctest_timeutil.h"
 
@@ -26,6 +29,7 @@ suite_t* suite_init() {
 
     s->finished   = false;
     s->n_tests    = 0;
+    s->n_segv     = 0;
     s->test_index = 0;
     s->tests      = NULL;
     s->results    = NULL;
@@ -155,21 +159,53 @@ int suite_next(suite_t* s, bool fatal_failures) {
     if (__hasprefix(test->name, "bench_")) {
         bench = true;
     }
+    int crash_count = __sigsegv_caught;
+
+    struct sigaction sa;
+    sa.sa_flags   = SA_SIGINFO;
+    sa.sa_handler = &__test_sigsegv_handler;
+    if (sigaction(SIGSEGV, &sa, NULL) == -1) {
+        perror("sigaction");
+        test_t_del(t);
+        return EXIT_FAILURE;
+    }
 
     /* run test */
     if (bench) {
         test_start(t);
     }
-    test->fn(t);
+    pthread_t thread;
+    if (pthread_create(&thread, NULL, test->fn, t) != 0) {
+        fprintf(stderr, "Could not create thread!\n");
+        test_t_del(t);
+        return EXIT_FAILURE;
+    }
+    void* retval = NULL;
+    if (pthread_join(thread, &retval) != 0) {
+        fprintf(stderr, "Could not join with thread!\n");
+        test_t_del(t);
+        return EXIT_FAILURE;
+    }
+    //    test->fn(t);
     if (bench && t->end->tv_sec == 0 && t->end->tv_nsec == 0) {
         test_done(t);
     }
-    int left = (s->n_tests) - (s->test_index + 1);
+    if (crash_count != __sigsegv_caught) {
+        t->failed = true;
+        s->n_segv++;
+        char* segv_msg = "encountered segmentation fault";
+        if (t->fail_msg != NULL) {
+            free(t->fail_msg);
+        }
+        t->fail_msg = calloc(strlen(segv_msg) + 1, sizeof(char));
+        strncpy(t->fail_msg, segv_msg, strlen(segv_msg));
+    }
 
     /* keep record of test results */
     s->results[s->test_index++] = t;
 
     /* print test results */
+    int   left = (s->n_tests) - (s->test_index + 1);
     char* res =
         calloc(256 + strlen(test->name) + strlen(test->desc), sizeof(char));
     int ret = EXIT_SUCCESS;

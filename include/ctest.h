@@ -194,7 +194,7 @@ typedef struct _testfn {
      * @param t - pointer to a test_t structure to capture context of test
      *		  results
      */
-    void (*fn)(test_t* t);
+    void* (*fn)(void* t);
 } testfn;
 
 /**
@@ -206,7 +206,7 @@ typedef struct _testfn {
  * @param desc - a human readable description of the test
  * @return A pointer to a fully initialized testfn structure.
  **/
-testfn* newtest(void (*f)(test_t* t), char* name, char* desc);
+testfn* newtest(void* (*f)(void* t), char* name, char* desc);
 
 /**
  * int testfn_del() frees memory allocated to a test function.
@@ -228,6 +228,8 @@ typedef struct suite_s {
     bool finished;
     /** n_tests is the number of tests in the suite. **/
     int n_tests;
+    /** n_segv is the number of segmentation faults that were caught. **/
+    int n_segv;
     /** test_index is the index of the current test. **/
     int test_index;
     /** tests is an array of testfn* that make up the suite. **/
