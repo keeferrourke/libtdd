@@ -162,6 +162,7 @@ int suite_next(suite_t* s, bool fatal_failures) {
     int crash_count = __sigsegv_caught;
 
     struct sigaction sa;
+    memset(&sa, 0, sizeof(struct sigaction));
     sa.sa_flags   = SA_SIGINFO;
     sa.sa_handler = &__test_sigsegv_handler;
     if (sigaction(SIGSEGV, &sa, NULL) == -1) {
