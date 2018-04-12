@@ -49,7 +49,8 @@ _OBJS	= $(patsubst $(SRCDIR)/%.c, %.o, $(SRC))
 OBJS	= $(addprefix $(OBJDIR)/, $(_OBJS))
 
 # compilation flags
-CFLAGS	= -Wall -pedantic -g $(STD) -pthread $(DEFINE)
+CFLAGS	= -Wall -pedantic -g $(STD) $(DEFINE)
+OFLAGS	= -pthread
 INCLUDE = -I$(INCLDIR)
 
 .PHONY: all lib dylib

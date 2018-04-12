@@ -149,6 +149,7 @@ int suite_run(suite_t* s, bool fatal_failures) {
     return EXIT_SUCCESS;
 }
 
+/* TODO: factor this so that results may be printed to arbitrary files */
 int suite_next(suite_t* s, bool fatal_failures) {
     if (s == NULL) return EXIT_FAILURE;
 
@@ -214,6 +215,7 @@ int suite_next(suite_t* s, bool fatal_failures) {
         sprintf(res, "fail: test %d/%d (%s)\n", s->test_index, s->n_tests,
                 test->name);
         __print_error(stdout, res);
+        fprintf(stdout, "      ");
         __print_desc(stdout, t->fail_msg);
         fprintf(stdout, "\n");
         if (fatal_failures != 0) {

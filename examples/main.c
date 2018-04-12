@@ -23,7 +23,7 @@ int main(int argc, char* argv[]) {
     // number of tests at once
     suite_add(s, 2,
               newtest(&test_timer, "test_timer",
-                      "Manual benchmark. Requires timespan to printed "
+                      "Manual benchmark. Requires timespan to be printed "
                       "manually."),
               newtest(&bench_func, "bench_func",
                       "Builtin benchmark. Execution timespan is printed "
@@ -79,7 +79,7 @@ void* test_errfunc(void* t) {
 
 void* test_failfunc(void* t) {
     test_fail(t, "a critical error occurred!");
-    printf("this code should not run!\n");
+    printf("this code should not run unless fatal failures are disabled!\n");
     return t;
 }
 
