@@ -17,16 +17,13 @@
 # Project related configuration options
 #---------------------------------------------------------------------------
 
-#------------------
-things you need to change for each project
-#------------------
 # The PROJECT_NAME tag is a single word (or a sequence of words surrounded by
 # double-quotes, unless you are using Doxywizard) that should identify the
 # project for which the documentation is generated. This name is used in the
 # title of most generated pages and in a few other places.
 # The default value is: My Project.
 
-PROJECT_NAME           = "ctest"
+PROJECT_NAME           = "libtdd"
 
 
 # The INPUT tag is used to specify the files and/or directories that contain
@@ -37,19 +34,12 @@ PROJECT_NAME           = "ctest"
 
 INPUT                  = include
 
-
 # The OUTPUT_DIRECTORY tag is used to specify the (relative or absolute) path
 # into which the generated documentation will be written. If a relative path is
 # entered, it will be relative to the location where doxygen was started. If
 # left blank the current directory will be used.
 
 OUTPUT_DIRECTORY       = docs
-
-
-
-#------------------
-things that can remain the same for each project unless you want to play
-#------------------
 
 # This tag specifies the encoding used for all characters in the config file
 # that follow. The default is UTF-8 which is also the encoding used for all text
@@ -59,8 +49,6 @@ things that can remain the same for each project unless you want to play
 # The default value is: UTF-8.
 
 DOXYFILE_ENCODING      = UTF-8
-
-
 
 # The PROJECT_NUMBER tag can be used to enter a project or revision number. This
 # could be handy for archiving the generated documentation or if some version
@@ -80,7 +68,6 @@ PROJECT_BRIEF          =
 # the logo to the output directory.
 
 PROJECT_LOGO           =
-
 
 # If the CREATE_SUBDIRS tag is set to YES then doxygen will create 4096 sub-
 # directories (in 2 levels) under the output directory of each output format and

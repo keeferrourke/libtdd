@@ -1,11 +1,12 @@
 /**
- * @file ctest_signals.c
+ * @file signals.c
  * @author Keefer Rourke <mail@krourke.org>
  * @date Wed Apr 11
- * @brief This file defines signal handlers for libctest.
+ * @brief This file defines signal handlers for libtdd.
+ * @private
  **/
-#ifndef __CTEST_SIGNAL_HANDLERS_H__
-#define __CTEST_SIGNAL_HANDLERS_H__
+#ifndef __TDD_SIGNAL_HANDLERS_H__
+#define __TDD_SIGNAL_HANDLERS_H__
 
 #include <signal.h>
 #include <stdlib.h>

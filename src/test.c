@@ -1,5 +1,5 @@
 /**
- * @file ctest_testfn.c
+ * @file test.c
  * @author Keefer Rourke <mail@krourke.org>
  * @date 08 Apr 2018
  * @brief This file contains implementation details of functions pertaining to
@@ -15,7 +15,7 @@
 #include <string.h>
 #include <time.h>
 
-#include "ctest.h"
+#include "tdd.h"
 
 test_t* test_t_init() {
     test_t* t   = malloc(sizeof(test_t));

@@ -1,5 +1,5 @@
 /**
- * @file ctest_suite.c
+ * @file suite.c
  * @author Keefer Rourke <mail@krourke.org>
  * @date 08 Apr 2018
  * @brief This file contains implementation details of functions pertaining to
@@ -15,10 +15,10 @@
 #include <string.h>
 #include <time.h>
 
-#include "ctest.h"
-#include "ctest_signals.h"
-#include "ctest_strutil.h"
-#include "ctest_timeutil.h"
+#include "signals.h"
+#include "strutil.h"
+#include "tdd.h"
+#include "timeutil.h"
 
 suite_t* suite_init() {
     suite_t* s = malloc(sizeof(suite_t));
@@ -33,6 +33,7 @@ suite_t* suite_init() {
     s->test_index = 0;
     s->tests      = NULL;
     s->results    = NULL;
+    s->outfile    = stdout;
 
     return s;
 }
@@ -40,9 +41,10 @@ suite_t* suite_init() {
 void suite_reset(suite_t* s) {
     if (s == NULL) return;
 
-    /* reset all suite data */
     s->finished   = false;
+    s->n_segv     = 0;
     s->test_index = 0;
+
     for (int i = 0; i < s->n_tests; i++) {
         test_t_del(s->results[i]);
         s->results[i] = NULL;
@@ -188,7 +190,6 @@ int suite_next(suite_t* s, bool fatal_failures) {
         test_t_del(t);
         return EXIT_FAILURE;
     }
-    //    test->fn(t);
     if (bench && t->end->tv_sec == 0 && t->end->tv_nsec == 0) {
         test_done(t);
     }
@@ -207,37 +208,49 @@ int suite_next(suite_t* s, bool fatal_failures) {
     s->results[s->test_index++] = t;
 
     /* print test results */
+    FILE* f    = s->outfile;
     int   left = (s->n_tests) - (s->test_index + 1);
     char* res =
         calloc(256 + strlen(test->name) + strlen(test->desc), sizeof(char));
     int ret = EXIT_SUCCESS;
     if (t->failed) {
-        sprintf(res, "fail: test %d/%d (%s)\n", s->test_index, s->n_tests,
+        sprintf(res, "fail: test %d/%d (%s): ", s->test_index, s->n_tests,
                 test->name);
-        __print_error(stdout, res);
-        fprintf(stdout, "      ");
-        __print_desc(stdout, t->fail_msg);
-        fprintf(stdout, "\n");
+        __print_error(f, res);
+        __print_desc(f, test->desc);
+        fprintf(f, "\n");
+        INDENT(f);
+        __print_desc(f, t->fail_msg);
+        fprintf(f, "\n");
         if (fatal_failures != 0) {
             printf("aborted with %d tests remaining.\n", left);
             ret = EXIT_FAILURE;
         }
     } else if (t->err != 0) {
-        sprintf(res, "err:  test %d/%d (%s) encountered %d errors.\n",
-                s->test_index, s->n_tests, test->name, t->err);
-        __print_warning(stdout, res);
+        sprintf(res, "err:  test %d/%d (%s): ", s->test_index, s->n_tests,
+                test->name);
+        __print_warning(f, res);
+        __print_desc(f, test->desc);
+        fprintf(f, "\n");
+        char* errstr = calloc(64, sizeof(char));
+        INDENT(f);
+        sprintf(errstr, "encountered %d errors.", t->err);
+        __print_warning(f, errstr);
+        free(errstr);
+        fprintf(f, "\n");
         for (int i = 0; i < t->err; i++) {
-            char* why = calloc(16 + strlen(t->err_msg[i]), sizeof(char));
-            sprintf(why, "      %d. %s\n", i + 1, t->err_msg[i]);
-            __print_desc(stdout, why);
+            char* why = calloc(32 + strlen(t->err_msg[i]), sizeof(char));
+            INDENT(f);
+            sprintf(why, "%d. %s\n", i + 1, t->err_msg[i]);
+            __print_desc(f, why);
             free(why);
         }
     } else {
         sprintf(res, "okay: test %d/%d (%s): ", s->test_index, s->n_tests,
                 test->name);
-        __print_success(stdout, res);
-        __print_desc(stdout, test->desc);
-        fprintf(stdout, "\n");
+        __print_success(f, res);
+        __print_desc(f, test->desc);
+        fprintf(f, "\n");
     }
     free(res);
 
@@ -246,11 +259,12 @@ int suite_next(suite_t* s, bool fatal_failures) {
         struct timespec tdiff = __timespec_minus(t->end, t->start);
 
         char* bench_info = calloc(64 + strlen(test->name), sizeof(char));
-        sprintf(bench_info, "      bench: test (%s) took ", test->name);
-        __print_desc(stdout, bench_info);
+        INDENT(f);
+        sprintf(bench_info, "bench: test (%s) took ", test->name);
+        __print_desc(f, bench_info);
         char* bench_res = calloc(256, sizeof(char));
         sprintf(bench_res, "%lds %ldns\n", tdiff.tv_sec, tdiff.tv_nsec);
-        __print_hilite(stdout, bench_res);
+        __print_hilite(f, bench_res);
         free(bench_info);
         free(bench_res);
     }

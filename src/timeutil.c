@@ -1,14 +1,14 @@
 /**
- * @file ctest_timeutil.h
+ * @file timeutil.h
  * @author Keefer Rourke <mail@krourke.org>
  * @date 08 Apr 2018
- * @brief Time format and manipulation functions and macros for libctest.
+ * @brief Time format and manipulation functions and macros for libtdd.
  * @private
  */
 #include <stdlib.h>
 #include <time.h>
 
-#include "ctest_timeutil.h"
+#include "timeutil.h"
 
 #define NSEC_S 1000000000L
 

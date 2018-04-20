@@ -1,5 +1,5 @@
 /**
- * @file ctest.c
+ * @file testfn.c
  * @author Keefer Rourke <mail@krourke.org>
  * @date 08 Apr 2018
  * @brief This file contains implementation details of functions pertaining to
@@ -13,10 +13,10 @@
 #include <string.h>
 #include <time.h>
 
-#include "ctest.h"
+#include "tdd.h"
 
 testfn* newtest(void* (*f)(void* t), char* name, char* desc) {
-    if (name == NULL || desc == NULL || f == NULL) {
+    if (name == NULL || f == NULL) {
         return NULL;
     }
 
@@ -27,8 +27,12 @@ testfn* newtest(void* (*f)(void* t), char* name, char* desc) {
     }
 
     tf->name = calloc(strlen(name) + 1, sizeof(char));
-    tf->desc = calloc(strlen(desc) + 1, sizeof(char));
-    tf->fn   = f;
+    if (desc != NULL) {
+        tf->desc = calloc(strlen(desc) + 1, sizeof(char));
+    } else {
+        tf->desc = calloc(1, sizeof(char)); /* empty string */
+    }
+    tf->fn = f;
 
     if (tf->name == NULL || tf->desc == NULL) {
         errno = ENOMEM;
@@ -42,7 +46,9 @@ testfn* newtest(void* (*f)(void* t), char* name, char* desc) {
     }
 
     strncpy(tf->name, name, strlen(name));
-    strncpy(tf->desc, desc, strlen(desc));
+    if (desc != NULL) {
+        strncpy(tf->desc, desc, strlen(desc));
+    }
 
     return tf;
 }
@@ -50,8 +56,12 @@ testfn* newtest(void* (*f)(void* t), char* name, char* desc) {
 int testfn_del(testfn* tf) {
     if (tf == NULL) return EXIT_FAILURE;
 
-    free(tf->name);
-    free(tf->desc);
+    if (tf->name != NULL) {
+        free(tf->name);
+    }
+    if (tf->desc != NULL) {
+        free(tf->desc);
+    }
     free(tf);
 
     return EXIT_SUCCESS;

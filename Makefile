@@ -1,4 +1,4 @@
-# libctest Makefile
+# libtdd Makefile
 # Keefer Rourke <mail@krourke.org>
 #
 # This Makefile creates dynamic and static library binaries for `libctest`.
@@ -13,6 +13,11 @@ SHELL = /bin/bash
 # determine platform
 UNAME = $(shell uname -s)
 
+# let make determine the compiler and archiver;
+# if it complains, try uncommenting the following lines
+# CC = gcc
+# AR = ar
+
 # set suffix list, to prevent confusion between different make programs
 # line 15 clears an implied suffix list, and line 16 sets a new one
 .SUFFIXES:
@@ -25,9 +30,7 @@ UNAME = $(shell uname -s)
 STD = -std=c99 -D_POSIX_C_SOURCE=199506L
 
 # library project structure
-CC	= gcc
-AR	= ar
-WD	= $(PWD)
+WD	:= $(PWD)
 INCLDIR	= $(WD)/include
 SRCDIR	= $(WD)/src
 OBJDIR	= $(WD)/obj
@@ -39,8 +42,8 @@ DOCDIR = docs
 TEXDIR = latex
 
 # library output
-_LIB	= libctest
-LIB	= $(addprefix $(OUTDIR)/, $(_LIB))
+OUTNAME	= libtdd
+LIB	= $(addprefix $(OUTDIR)/, $(OUTNAME))
 
 # files; here all object files will be stored in OBJDIR, with the same names
 # as corresponding c files from SRCDIR
@@ -49,7 +52,8 @@ _OBJS	= $(patsubst $(SRCDIR)/%.c, %.o, $(SRC))
 OBJS	= $(addprefix $(OBJDIR)/, $(_OBJS))
 
 # compilation flags
-CFLAGS	= -Wall -pedantic -g $(STD) $(DEFINE)
+# add extra flags on the command line by DEFINE=...
+CFLAGS	= -Wall -Wextra -pedantic -g $(STD) $(DEFINE)
 OFLAGS	= -pthread
 INCLUDE = -I$(INCLDIR)
 
@@ -60,15 +64,15 @@ all: lib dylib doc
 
 lib: $(OBJS) $(OUTDIR)
 	@$(AR) crs $(LIB).a $(OBJS)
-	@echo "Compiled libctest.a to $(OUTDIR)"
+	@echo "Compiled $(OUTNAME).a to $(OUTDIR)"
 
 dylib: $(OBJS) $(OUTDIR)
 ifeq ($(UNAME),Darwin)
 	@$(CC) -shared -o $(LIB).dylib $(OBJS)
-	@echo "Compiled libctest.dylib to $(OUTDIR)"
+	@echo "Compiled $(OUTNAME).dylib to $(OUTDIR)"
 else
 	@$(CC) -shared -o $(LIB).so $(OBJS)
-	@echo "Compiled libctest.so to $(OUTDIR)"
+	@echo "Compiled $(OUTNAME).so to $(OUTDIR)"
 endif
 
 # automatically compile all objects

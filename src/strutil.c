@@ -1,15 +1,17 @@
 /**
- * @file ctest_strutil.c
+ * @file strutil.c
  * @author Keefer Rourke <mail@krourke.org>
  * @date 08 Apr 2018
  * @brief String format and manipulation functions and macros for libctest.
+ *        Supports colour printing if USE_COLOUR or USE_COLOR are defined and
+ *        the output file is `stdout`.
  * @private
  */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "ctest_strutil.h"
+#include "strutil.h"
 
 /* set formattijng for output */
 #if defined(USE_COLOUR) || defined(USE_COLOR)
@@ -61,7 +63,7 @@ int __hasprefix(char* str, char* pre) {
     }
 
     int has = 1;
-    for (int i = 0; i < strlen(pre); i++) {
+    for (unsigned int i = 0; i < strlen(pre); i++) {
         if (str[i] != pre[i]) {
             has = 0;
             break;
@@ -73,30 +75,50 @@ int __hasprefix(char* str, char* pre) {
 
 void __print_error(FILE* f, char* str) {
     if (f == NULL || str == NULL) return;
-    fprintf(f, ERROR "%s" TEXT_RESET, str);
+    if (f == stdout) {
+        fprintf(f, ERROR "%s" TEXT_RESET, str);
+    } else {
+        fprintf(f, "%s", str);
+    }
     return;
 }
 
 void __print_warning(FILE* f, char* str) {
     if (f == NULL || str == NULL) return;
-    fprintf(f, WARNING "%s" TEXT_RESET, str);
+    if (f == stdout) {
+        fprintf(f, WARNING "%s" TEXT_RESET, str);
+    } else {
+        fprintf(f, "%s", str);
+    }
     return;
 }
 
 void __print_success(FILE* f, char* str) {
     if (f == NULL || str == NULL) return;
-    fprintf(f, SUCCESS "%s" TEXT_RESET, str);
+    if (f == stdout) {
+        fprintf(f, SUCCESS "%s" TEXT_RESET, str);
+    } else {
+        fprintf(f, "%s", str);
+    }
     return;
 }
 
 void __print_desc(FILE* f, char* str) {
     if (f == NULL || str == NULL) return;
-    fprintf(f, DESCRIBE "%s" TEXT_RESET, str);
+    if (f == stdout) {
+        fprintf(f, DESCRIBE "%s" TEXT_RESET, str);
+    } else {
+        fprintf(f, "%s", str);
+    }
     return;
 }
 
 void __print_hilite(FILE* f, char* str) {
     if (f == NULL || str == NULL) return;
-    fprintf(f, ATTENTION "%s" TEXT_RESET, str);
+    if (f == stdout) {
+        fprintf(f, ATTENTION "%s" TEXT_RESET, str);
+    } else {
+        fprintf(f, "%s", str);
+    }
     return;
 }

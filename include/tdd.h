@@ -1,5 +1,5 @@
 /**
- * @file ctest.h
+ * @file tdd.h
  * @author Keefer Rourke <mail@krourke.org>
  * @date 08 Apr 2018
  *
@@ -9,18 +9,27 @@
  *
  * Some minimal boilerplate is required to write a decent test suite for a
  * software package, but this is straight-forward and can be quickly written
- * in a main() function. This boilerplate is an unfortunate requirement,
- * because for the moment, there is no good tooling that is akin to the
- * `go test <file>` idiom used in golang.
+ * in a main() function.
  *
  * In a typical testing binary, the main() function should initialize tests
- * and create any resource files, etc. that might be expected by tests.
+ * and create any resource files, etc. that might be expected by tests in the
+ * suite.
  *
  * @section example Example usage of this library:
  *
  *```
  *  #include <stdlib.h>
- *  #include "ctest.h"
+ *  #include "tdd.h"
+ *
+ *  static void* error_func(test_t* t) {
+ *      test_error(t, "oops!");
+ *      return NULL;
+ *  }
+ *
+ *  static void* fail_func(test_t* t) {
+ *      test_fail(t, "badness!");
+ *      return NULL;
+ *  }
  *
  *  int main(int argc, char* argv[]) {
  *      // create test suite
@@ -28,8 +37,8 @@
  *
  *      // initalize tests
  *      // variadic func; add as many tests as needed
- *      suite_add(s, 2, newtest("error", &error_func),
- *                newtest("fail", &fail_func));
+ *      suite_add(s, 2, newtest(&error_func, "error", NULL),
+ *                newtest(&fail_func, "fail", NULL));
  *
  *      // run the test suite
  *      suite_run(s);
@@ -39,16 +48,35 @@
  *
  *      return stats.n_error
  *  }
- *  static void error_func(test_t* t) {
- *      test_error(t, "oops!");
- *  }
- *  static void fail_func(test_t* t) {
- *      test_fail(t, "badness!");
- *  }
  *```
+ *
+ * @section api Test API
+ * Test functions must always be defined by one of the following signatures:
+ *  - `void* test_func(test_t* t);` for regular tests
+ *  - `void* bench_func(test_t* t);` for benchmarking tests
+ *
+ * These functions are added to a test suite using either the `suite_add(...)`
+ * or `suite_addtest(testfn*)` API calls.
+ *
+ * @section benchmarking Benchmarking
+ * Test functions may be specially marked as time-sensitive, as in where
+ * performance is paramount. Tests may be marked for benchmarking by adding
+ * them to the suite with a name prefixed by `bench_`. For all benchmarked
+ * functions A timer will be started when the test runs, and stopped when the
+ * test finishes. A report of the runtime is printed after the test finishes.
+ *
+ * For example:
+ * ```
+ * suite_addtest(newtest(&bench_func, "bench_func", "time sensitive test"));
+ * ```
+ *
+ * @section notes Notes
+ * This library is multithreaded using POSIX `pthread`s. As such, any binaries
+ * built using this library must be compiled with either `gcc` or `clang`'s
+ * `-pthread` option.
  **/
-#ifndef __CTEST_H__
-#define __CTEST_H__
+#ifndef __TDD_H__
+#define __TDD_H__
 
 #include <stdarg.h>
 #include <stdbool.h>
@@ -66,82 +94,82 @@ struct suite_s;
  * occurs or the test downright fails, you should call `test_error(t)` and
  * `test_fail(t)` respectively.
  **/
-typedef struct test_s {
+typedef struct test_t {
     /**
-     * failed is a boolean flag specifying if the current test has failed.
+     * `failed` is a boolean flag specifying if the current test has failed.
      **/
     bool failed;
     /**
-     * err is a integer flag specifying the number of errors the current test
-     * has encountered.
+     * `err` is a integer flag specifying the number of errors the current
+     * test has encountered.
      **/
     int err;
     /**
-     * fail_msg is a a message that is by test_fail() indicating the reason
+     * `fail_msg` is a message that is by test_fail() indicating the reason
      * for test failure. Heap allocated.
      **/
     char* fail_msg;
     /**
-     * err_msg is an array of character strings that is appended to on each
+     * `err_msg` is an array of character strings that is appended to on each
      * call to test_error(). Each string in this array corresponds to the
      * reason for errors in order of occurance. Each string is Heap allocated.
      **/
     char** err_msg;
     /**
-     * start is the timestamp at which the test was started. Heap allocated.
+     * `start` is the timestamp at which the test was started. Heap allocated.
      **/
     struct timespec* start;
     /**
-     * end is the timestamp at which the test was marked as done. Heap
+     * `end` is the timestamp at which the test was marked as done. Heap
      * allocated.
      **/
     struct timespec* end;
     /**
-     * failed_at is the timestamp at which the test last experienced failure.
-     * Heap allocated.
+     * `failed_at` is the timestamp at which the test last encountered a
+     * failure. Heap allocated.
      **/
     struct timespec* failed_at;
     /**
-     * error_at is the timestamp at which the test last experienced an error.
-     * Heap allocated.
+     * `error_at` is the timestamp at which the test last encountered an
+     * error. Heap allocated.
      **/
     struct timespec* error_at;
     /**
-     * fail() marks the test as failed with a message explaining the reason
+     * `fail()` marks the test as failed with a message explaining the reason
      * for failure.
      **/
-    void (*fail)(struct test_s* t, char* msg);
+    void (*fail)(struct test_t* t, char* msg);
     /**
-     * error() marks the test as having encountered an error with a message
+     * `error()` marks the test as having encountered an error with a message
      * explaining the reason for the error
      **/
-    void (*error)(struct test_s* t, char* msg);
-    /** done() marks the test as finished **/
-    void (*done)(struct test_s* t);
+    void (*error)(struct test_t* t, char* msg);
+    /** `done()` marks the test as finished **/
+    void (*done)(struct test_t* t);
 } test_t;
 
 /**
- * test_t_init() makes a new test function. Not to be called explicitly.
+ * `test_t_init()` makes a new test function. Not to be called explicitly.
  * @private
- * @return A pointer to a fully initialized test_t structure.
+ * @return A pointer to a fully initialized `test_t` structure.
  **/
 test_t* test_t_init();
 
 /**
- * test_t_del() frees all memory associated with a test_t structure. Not to be
- * called explicitly.
+ * `test_t_del()` frees all memory associated with a `test_t` structure.
+ * Not to be called explicitly.
  * @private
- * @param t - pointer to the test_t structure to be freed
+ * @param t - pointer to the `test_t` structure to be freed
  * @return int
  */
 int test_t_del(test_t* t);
 
 /**
- * test_fail() marks the test as failed with a message. Failures are
+ * `test_fail()` marks the test as failed with a message. Failures are
  * identified as critical errors that will not allow testing to continue.
- * Use test_fail() to catch fundamental errors in program function execution.
- * To be called within a testfn::fn. Alternatively may be called through the
- * test_t::fail interface.
+ * Use `test_fail()` to catch fundamental errors in program function
+ * execution. To be called within a testfn::fn. Alternatively may be called
+ * through the test_t::fail interface.
  * @param t   - pointer to a test_t structure to capture the context of a
  *	        test failure
  * @param msg - character string indicating the reason for failure
@@ -178,7 +206,7 @@ void test_done(test_t* t);
 /**
  * Testing function.
  **/
-typedef struct _testfn {
+typedef struct testfn {
     /**
      * name is a character string identifier for a test. It is usually just
      * the name of the function itself, such as "test_func".
@@ -186,7 +214,8 @@ typedef struct _testfn {
     char* name;
     /**
      * desc is a character string description for a test. It should be a
-     * humanly readable explanation of what the test is performing.
+     * humanly readable explanation of what the test is performing. Optional
+     * field in constructor.
      */
     char* desc;
     /**
@@ -203,7 +232,7 @@ typedef struct _testfn {
  *		 within its single `test_t*` argument
  * @param name - a character string identifier for the test; usually the name
  *		 of the test function itself
- * @param desc - a human readable description of the test
+ * @param desc - a human readable description of the test; can be NULL
  * @return A pointer to a fully initialized testfn structure.
  **/
 testfn* newtest(void* (*f)(void* t), char* name, char* desc);
@@ -219,7 +248,7 @@ int testfn_del(testfn* tf);
  * Testing suite. Contains all tests, current runtime state, and the results
  * of each test. May be used to contruct a suite_stats_t after running.
  **/
-typedef struct suite_s {
+typedef struct suite_t {
     /**
      * finished is a boolean flag specifying if all tests have run. If this
      * flag is not set, then the suite aborted testing with a fatal failure
@@ -239,12 +268,18 @@ typedef struct suite_s {
      * element in tests.
      **/
     test_t** results;
+    /**
+     * outfile is a FILE pointer which is where the results of the test will
+     * be printed. This is stdout by default, but may be changed manually
+     * after the suite is initialized and before it is run.
+     */
+    FILE* outfile;
 } suite_t;
 
 /**
  * Stats structure detailing results of test suite.
  **/
-typedef struct suite_stats_s {
+typedef struct suite_stats_t {
     char** tests_run;
     int    n_tests;
     int    n_error;
@@ -259,8 +294,8 @@ typedef struct suite_stats_s {
 suite_t* suite_init();
 
 /**
- * suite_reset() resets a suite_t to its initial state, as if it were never
- * run.
+ * suite_reset() resets a suite_t to its initial state, as if it were
+ *never run.
  * @param s - a pointer to a suite_t test suite to be reset
  **/
 void suite_reset(suite_t* s);
@@ -290,8 +325,8 @@ int suite_addtest(suite_t* s, testfn* f);
 /**
  * suite_run() runs all tests in the test array.
  * @param s: the test suite to run
- * @param fatal_failures: true indicates that the suite should abort testing
- *			  if any test was marked as a failure
+ * @param fatal_failures: true indicates that the suite should abort
+ *testing if any test was marked as a failure
  * @return `EXIT_SUCCESS`, or, if `fatal_failures` is true, `EXIT_FAILURE`
  *	   after the first failed test.
  **/
@@ -300,8 +335,8 @@ int suite_run(suite_t* s, bool fatal_failures);
 /**
  * suite_next() runs the next test in the suite.
  * @param s: the test suite to run
- * @param fatal_failures: true indicates that the suite should abort testing
- *			  if any test was marked as a failure
+ * @param fatal_failures: true indicates that the suite should abort
+ *testing if any test was marked as a failure
  * @return `EXIT_SUCCESS`, or, if `fatal_failures` is true, `EXIT_FAILURE`
  *	   after the first failed test.
  **/

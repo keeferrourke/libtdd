@@ -1,10 +1,14 @@
-ctest
-=======
+libtdd
+======
 
-`ctest` is a minimalist testing framework inspired by the Golang
-testing pkg. This small C library attempts to provide a consistent API
-for creating, running, and checking the results of tests. There is very
-little boilerplate required in the main function.
+`libtdd` is a minimalist testing framework inspired by the Golang
+testing pkg. It is designed to provide a framework which may be used to
+build scaffolding during Test Driven Development (TDD).
+
+This small C library attempts to provide a consistent API for creating,
+running, and checking the results of tests. There is very little
+boilerplate required in the main function.
+
 
 Features
 --------
@@ -22,15 +26,15 @@ Build and usage
 The Makefile included with this project creates static and dynamic
 libraries in the `lib/` directory. To build this, simply run:
 
-    make lib    # libctest.a
-    make dylib  # libctest.so (or libctest.dylib on Darwin)
+    make lib    # libtdd.a
+    make dylib  # libtdd.so (or libtdd.dylib on macOS/Darwin)
 
 Colour output support can be enabled at compile time by including the
 `DEFINE=-DUSE_COLOUR` directive on the `make` line. ex.
 
     make dylib DEFINE=-DUSE_COLOUR  # enables pretty colour printing
 
-You can then include the outputted `libctest.so` or `libctest.a` in your
+You can then include the outputted `libtdd.so` or `libtdd.a` in your
 project as is required.
 
 API documentation can be compiled with Doxygen and LaTeX via:
@@ -39,7 +43,7 @@ API documentation can be compiled with Doxygen and LaTeX via:
 
 See the Makefile for other relevant build targets.
 
-**NOTE** Darwin/macOS support is untested at this time.
+**NOTE** macOS/Darwin support is untested at this time.
 This library was built and tested on Fedora 27 Workstation with glibc
 v2.26.
 
@@ -52,9 +56,9 @@ library can be found in the `examples/` directory of this project.
 It can be compiled and run as follows:
     
     make lib
-    gcc -o ctest_example -std=c99 -Iinclude examples/main.c -pthread \
-        -Llib -lctest
-    ./ctest_example
+    cc -o tdd_example -std=c99 -Iinclude examples/main.c -pthread \
+       -Llib -ltdd
+    ./tdd_example
 
 
 Conventions
