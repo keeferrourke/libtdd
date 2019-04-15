@@ -1,10 +1,10 @@
 /**
  * @file strutil.c
+ * @private
  * @author Keefer Rourke <mail@krourke.org>
  * @brief String format and manipulation functions and macros.
  *        Supports colour printing if USE_COLOUR or USE_COLOR are defined and
  *        the output file is `stdout`.
- * @private
  */
 #include <stdio.h>
 #include <stdlib.h>

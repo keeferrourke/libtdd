@@ -111,10 +111,6 @@ extern volatile sig_atomic_t tdd_sigsegv_caught;
  **/
 void tdd_sigsegv_handler(int sig);
 
-struct runner_s;
-struct test_s;
-struct suite_s;
-
 /**
  * Testing structure. This structure is the only parameter in all testing
  * functions. If at any point during a testing function, unexpected bevahiour
@@ -239,7 +235,7 @@ void* test_timer_end(test_t* t);
 /**
  * Testing function.
  **/
-typedef struct runner_s {
+typedef struct runner_t {
     /**
      * `name` is a character string identifier for a test. It is usually just
      * the name of the function itself, such as "test_func".
