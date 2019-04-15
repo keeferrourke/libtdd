@@ -54,7 +54,7 @@ A simple example program that demonstrates all features provided by this
 library can be found in the `examples/` directory of this project.
 
 It can be compiled and run as follows:
-    
+
     make lib
     cc -o tdd_example -std=c99 -Iinclude examples/main.c -pthread \
        -Llib -ltdd
@@ -124,3 +124,18 @@ Copyright (c) 2018 Keefer Rourke <mail@krourke.org>
 
 This software is released under the ISC License. See LICENSE for more
 details.
+
+Alternatives
+------------
+
+This project aims to realize a modern, easy to use solution for C
+testing frameworks. If you don't want to use this, there are some
+alternatives that I like:
+
+ - [`rcunit`](https://github.com/jecklgamis/rcunit)
+    + Seems very similar to the goals of my project;
+      I wish I'd known about it before :wink:
+ - [`minunit`](http://www.jera.com/techinfo/jtns/jtn002.html)
+    + For the ultra minimal
+ - [`check`](https://libcheck.github.io/check/)
+    + Includes an extensive assertion library
