@@ -219,7 +219,7 @@ int suite_next(suite_t* s, bool fatal_failures) {
         __print_error(f, res);
         __print_desc(f, test->desc);
         fprintf(f, "\n");
-        INDENT(f);
+        __INDENT(f, 6);
         __print_desc(f, t->fail_msg);
         fprintf(f, "\n");
         if (fatal_failures != 0) {
@@ -233,14 +233,14 @@ int suite_next(suite_t* s, bool fatal_failures) {
         __print_desc(f, test->desc);
         fprintf(f, "\n");
         char* errstr = calloc(64, sizeof(char));
-        INDENT(f);
+        __INDENT(f, 6);
         sprintf(errstr, "encountered %d errors.", t->err);
         __print_warning(f, errstr);
         free(errstr);
         fprintf(f, "\n");
         for (int i = 0; i < t->err; i++) {
             char* why = calloc(32 + strlen(t->err_msg[i]), sizeof(char));
-            INDENT(f);
+            __INDENT(f, 6);
             sprintf(why, "%d. %s\n", i + 1, t->err_msg[i]);
             __print_desc(f, why);
             free(why);
@@ -259,7 +259,7 @@ int suite_next(suite_t* s, bool fatal_failures) {
         struct timespec tdiff = __timespec_minus(t->end, t->start);
 
         char* bench_info = calloc(64 + strlen(test->name), sizeof(char));
-        INDENT(f);
+        __INDENT(f, 6);
         sprintf(bench_info, "bench: test (%s) took ", test->name);
         __print_desc(f, bench_info);
         char* bench_res = calloc(256, sizeof(char));
