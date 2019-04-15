@@ -15,7 +15,6 @@
 #include <string.h>
 #include <time.h>
 
-#include "signals.h"
 #include "strutil.h"
 #include "tdd.h"
 #include "timeutil.h"
