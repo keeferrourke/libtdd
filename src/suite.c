@@ -106,7 +106,7 @@ void suite_add(suite_t* s, int n, ...) {
     return;
 }
 
-int suite_addtest(suite_t* s, testfn* f) {
+int suite_addtest(suite_t* s, testfn* fn) {
     if (s == NULL) return EXIT_FAILURE;
 
     s->n_tests++;
@@ -121,7 +121,7 @@ int suite_addtest(suite_t* s, testfn* f) {
         return EXIT_FAILURE;
     }
     s->tests                 = tmp_tests;
-    s->tests[s->n_tests - 1] = f;
+    s->tests[s->n_tests - 1] = fn;
 
     /* grow results array with the tests */
     test_t** tmp_results = realloc(s->results, sizeof(test_t*) * s->n_tests);
@@ -156,18 +156,19 @@ int suite_next(suite_t* s, bool fatal_failures) {
     if (s == NULL) return EXIT_FAILURE;
 
     /* set up test */
-    test_t* t     = test_t_init();
-    testfn* test  = s->tests[s->test_index];
-    bool    bench = false;
+    testfn* test = s->tests[s->test_index];
+    test_t* t    = test_t_init(test->name);
+
+    bool bench = false;
     if (__hasprefix(test->name, "bench_")) {
         bench = true;
     }
-    int crash_count = __sigsegv_caught;
+    int crash_count = tdd_sigsegv_caught;
 
     struct sigaction sa;
     memset(&sa, 0, sizeof(struct sigaction));
     sa.sa_flags   = SA_SIGINFO;
-    sa.sa_handler = &__test_sigsegv_handler;
+    sa.sa_handler = &tdd_sigsegv_handler;
     if (sigaction(SIGSEGV, &sa, NULL) == -1) {
         perror("sigaction");
         test_t_del(t);
@@ -193,7 +194,7 @@ int suite_next(suite_t* s, bool fatal_failures) {
     if (bench && t->end->tv_sec == 0 && t->end->tv_nsec == 0) {
         test_done(t);
     }
-    if (crash_count != __sigsegv_caught) {
+    if (crash_count != tdd_sigsegv_caught) {
         t->failed = true;
         s->n_segv++;
         char* segv_msg = "encountered segmentation fault";
@@ -270,40 +271,4 @@ int suite_next(suite_t* s, bool fatal_failures) {
     }
 
     return ret;
-}
-
-suite_stats_t* suite_stats(suite_t* s) {
-    if (s == NULL) return NULL;
-
-    suite_stats_t* stats = malloc(sizeof(suite_stats_t));
-    stats->tests_run     = malloc(sizeof(char*) * (s->test_index));
-
-    int nerr = 0, nfail = 0;
-    for (int i = 0; i < s->test_index; i++) {
-        testfn* t           = s->tests[i];
-        stats->tests_run[i] = malloc(sizeof(char) * (strlen(t->name) + 1));
-        strcpy(stats->tests_run[i], t->name);
-
-        test_t* r = s->results[i];
-        if (r->err != 0) nerr++;
-        if (r->failed != 0) nfail++;
-    }
-    stats->n_tests = s->n_tests;
-    stats->n_ran   = s->test_index;
-    stats->n_error = nerr;
-    stats->n_fail  = nfail;
-
-    return stats;
-}
-
-int suite_delstats(suite_stats_t* stats) {
-    if (stats == NULL) return EXIT_FAILURE;
-
-    for (int i = 0; i < stats->n_ran; i++) {
-        free(stats->tests_run[i]);
-    }
-    free(stats->tests_run);
-    free(stats);
-
-    return EXIT_SUCCESS;
 }

@@ -1,9 +1,9 @@
 /**
+ * @private
  * @file strutil.h
  * @author Keefer Rourke <mail@krourke.org
  * @date 08 Apr 2018
  * @brief String format and manipulation functions and macros for libtdd.
- * @private
  */
 #ifndef __TDD_STRING_UTIL_H__
 #define __TDD_STRING_UTIL_H__

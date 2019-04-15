@@ -7,12 +7,12 @@
 #include <signal.h>
 #include <stdlib.h>
 
-#include "signals.h"
+#include "tdd.h"
 
-volatile sig_atomic_t __sigsegv_caught = 0;
+volatile sig_atomic_t tdd_sigsegv_caught = 0;
 
-void __test_sigsegv_handler(int sig) {
+void tdd_sigsegv_handler(int sig) {
     if (sig != SIGSEGV) return;
 
-    __sigsegv_caught++;
+    tdd_sigsegv_caught++;
 }

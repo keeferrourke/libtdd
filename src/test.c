@@ -17,8 +17,9 @@
 
 #include "tdd.h"
 
-test_t* test_t_init() {
+test_t* test_t_init(const char* name) {
     test_t* t   = malloc(sizeof(test_t));
+    t->name     = name;
     t->failed   = false;
     t->err      = 0;
     t->fail_msg = NULL;
