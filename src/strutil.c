@@ -1,8 +1,7 @@
 /**
  * @file strutil.c
  * @author Keefer Rourke <mail@krourke.org>
- * @date 08 Apr 2018
- * @brief String format and manipulation functions and macros for libctest.
+ * @brief String format and manipulation functions and macros.
  *        Supports colour printing if USE_COLOUR or USE_COLOR are defined and
  *        the output file is `stdout`.
  * @private

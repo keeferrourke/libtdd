@@ -1,7 +1,6 @@
 /**
  * @file test.c
  * @author Keefer Rourke <mail@krourke.org>
- * @date 08 Apr 2018
  * @brief This file contains implementation details of functions pertaining to
  *        using test_t structures for managing simple test suites.
  **/
@@ -17,7 +16,7 @@
 
 #include "tdd.h"
 
-test_t* test_t_init(const char* name) {
+test_t* tdd_test_new(const char* name) {
     test_t* t   = malloc(sizeof(test_t));
     t->name     = name;
     t->failed   = false;
@@ -34,12 +33,13 @@ test_t* test_t_init(const char* name) {
     /* set alternative interface for fail, error, done cases (more OO-like) */
     t->fail  = &test_fail;
     t->error = &test_error;
-    t->done  = &test_done;
+    t->begin = &test_timer_start;
+    t->done  = &test_timer_end;
 
     return t;
 }
 
-int test_t_del(test_t* t) {
+int tdd_test_del(test_t* t) {
     if (t == NULL) return EXIT_FAILURE;
 
     if (t->fail_msg != NULL) {
@@ -70,7 +70,8 @@ void test_fail(test_t* t, char* msg) {
     strncpy(t->fail_msg, msg, strlen(msg));
 
     clock_gettime(CLOCK_MONOTONIC, t->failed_at);
-    pthread_cancel(pthread_self());
+    void* retval = NULL
+    pthread_join(pthread_self(), &retval);
 
     return;
 }
@@ -93,14 +94,12 @@ void test_error(test_t* t, char* msg) {
     return;
 }
 
-void test_start(test_t* t) {
+void test_timer_start(test_t* t) {
     clock_gettime(CLOCK_MONOTONIC, t->start);
-
     return;
 }
 
-void test_done(test_t* t) {
+void test_timer_end(test_t* t) {
     clock_gettime(CLOCK_MONOTONIC, t->end);
-
     return;
 }

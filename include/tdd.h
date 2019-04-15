@@ -1,7 +1,6 @@
 /**
  * @file tdd.h
  * @author Keefer Rourke <mail@krourke.org>
- * @date 08 Apr 2018
  *
  * @mainpage
  * This library provides a simple framework for defining, organizing, and
@@ -33,16 +32,16 @@
  *
  *  int main(int argc, char* argv[]) {
  *      // create test suite
- *      suite_t* s = suite_init();
+ *      suite_t* s = suite_new();
  *
  *      // initalize tests
  *      // variadic func; add as many tests as needed
- *      suite_add(s, 2, newtest(&error_func, "error", NULL),
- *                newtest(&fail_func, "fail", NULL));
+ *      suite_add(s, 2, tdd_runner_new(&error_func, "error", NULL),
+ *                tdd_runner_new(&fail_func, "fail", NULL));
  *
  *      // run the test suite
  *      suite_run(s);
- *      stats = suite_stats(s);
+ *      stats = suite_get_stats(s);
  *      suite_del(s);
  *      ...
  *
@@ -56,7 +55,7 @@
  *  - `void* bench_func(test_t* t);` for benchmarking tests
  *
  * These functions are added to a test suite using either the `suite_add(...)`
- * or `suite_addtest(testfn*)` API calls.
+ * or `suite_add_test(runner_t*)` API calls.
  *
  * @section benchmarking Benchmarking
  * Test functions may be specially marked as time-sensitive, as in where
@@ -67,7 +66,7 @@
  *
  * For example:
  * ```
- * suite_addtest(newtest(&bench_func, "bench_func", "time sensitive test"));
+ * suite_add_test(tdd_runner_new(&bench_func, "bench_func", "time sensitive test"));
  * ```
  *
  * @section notes Notes
@@ -98,7 +97,7 @@ extern volatile sig_atomic_t tdd_sigsegv_caught;
  **/
 void tdd_sigsegv_handler(int sig);
 
-struct _testfn;
+struct runner_s;
 struct test_s;
 struct suite_s;
 
@@ -162,32 +161,34 @@ typedef struct test_t {
      * explaining the reason for the error
      **/
     void (*error)(struct test_t* t, char* msg);
+    /** `begin()` starts a benchmark timer for the test **/
+    void (*begin)(struct test_t* t);
     /** `done()` marks the test as finished **/
     void (*done)(struct test_t* t);
 } test_t;
 
 /**
- * `test_t_init()` makes a new test function. Not to be called explicitly.
+ * `tdd_test_new()` makes a new test function. Not to be called explicitly.
  * @private
  * @return A pointer to a fully initialized `test_t` structure.
  **/
-test_t* test_t_init();
+test_t* tdd_test_new();
 
 /**
- * `test_t_del()` frees all memory associated with a `test_t` structure.
+ * `tdd_test_del()` frees all memory associated with a `test_t` structure.
  * Not to be called explicitly.
  * @private
  * @param t - pointer to the `test_t` structure to be freed
  * @return int
  */
-int test_t_del(test_t* t);
+int tdd_test_del(test_t* t);
 
 /**
  * `test_fail()` marks the test as failed with a message. Failures are
  * identified as critical errors that will not allow testing to continue.
  * Use `test_fail()` to catch fundamental errors in program function
- * execution. To be called within a `testfn::fn`. Alternatively may be called
- * through the `test_t::fail` interface.
+ * execution. To be called within a `runner_t::fn`. Alternatively may be
+ * called through the `test_t::fail` interface.
  * @param t   - pointer to a `test_t` structure to capture the context of a
  *	            test failure
  * @param msg - character string indicating the reason for failure
@@ -199,7 +200,7 @@ void test_fail(test_t* t, char* msg);
  * identified as non-critical flaws in program function execution which do
  * not prevent continuation of testing. Use `test_error()` to record
  * unexpected but valid return values and similar flaws. To be called within a
- * `testfn::fn`. Alternatively may be called through the `test_t::error`
+ * `runner_t::fn`. Alternatively may be called through the `test_t::error`
  * interface.
  * @param t   - pointer to a `test_t` structure to capture the context of a
  *  	        test error
@@ -208,23 +209,23 @@ void test_fail(test_t* t, char* msg);
 void test_error(test_t* t, char* msg);
 
 /**
- * `test_start()` marks the time at which the test started. This may be useful
- * for benchmarking and should be called after any test setup code.
+ * `test_timer_start()` marks the time at which the test started. This may be
+ * useful for benchmarking and should be called after any test setup code.
  * @param t - pointer to a `test_t` structure to capture the test finish time
  **/
-void test_start(test_t* t);
+void test_timer_start(test_t* t);
 
 /**
- * `test_done()` marks the time at which the test finished. This may be useful
- * for benchmarking and should be called before any test teardown code.
+ * `test_timer_end()` marks the time at which the test finished. This may be
+ * useful for benchmarking and should be called before any test teardown code.
  * @param t - pointer to a `test_t` structure to capture the test finish time
  **/
-void test_done(test_t* t);
+void test_timer_end(test_t* t);
 
 /**
  * Testing function.
  **/
-typedef struct testfn {
+typedef struct runner_s {
     /**
      * `name` is a character string identifier for a test. It is usually just
      * the name of the function itself, such as "test_func".
@@ -242,25 +243,25 @@ typedef struct testfn {
      *		      results
      */
     void* (*fn)(void* t);
-} testfn;
+} runner_t;
 
 /**
- * `newtest()` creates and returns a pointer to an initialized testfn.
+ * `tdd_runner_new()` creates and returns a pointer to an initialized runner_t.
  * @param f    - a pointer to a function that records information about a test
  *		         within its single `test_t*` argument
  * @param name - a character string identifier for the test; usually the name
  *		         of the test function itself
  * @param desc - a human readable description of the test; can be `NULL`
- * @return A pointer to a fully initialized testfn structure.
+ * @return A pointer to a fully initialized runner_t structure.
  **/
-testfn* newtest(void* (*f)(void* t), char* name, char* desc);
+runner_t* tdd_runner_new(void* (*f)(void* t), char* name, char* desc);
 
 /**
- * `testfn_del()` frees memory allocated to a test function.
- * @param tf - a pointer to a `testfn` that is to be destroyed
+ * `runner_del()` frees memory allocated to a test function.
+ * @param tf - a pointer to a `runner_t` that is to be destroyed
  * @return`EXIT_SUCCESS`, otherwise `EXIT_FAILURE` if tf is `NULL`.
  **/
-int testfn_del(testfn* tf);
+int tdd_runner_del(runner_t* tf);
 
 /**
  * Testing suite. Contains all tests, current runtime state, and the results
@@ -280,8 +281,8 @@ typedef struct suite_t {
     int n_segv;
     /** `test_index` is the index of the current test. **/
     int test_index;
-    /** `tests` is an array of testfn* that make up the suite. **/
-    testfn** tests;
+    /** `tests` is an array of runner_t* that make up the suite. **/
+    runner_t** tests;
     /**
      * `results` is an array of `test_t*` that details testing results for
      * each element in tests.
@@ -302,10 +303,10 @@ typedef struct suite_t {
 } suite_t;
 
 /**
- * `suite_init()` creates and returns a new test suite.
+ * `suite_new()` creates and returns a new test suite.
  * @return A pointer to a fully intialized suite_t structure.
  **/
-suite_t* suite_init();
+suite_t* suite_new();
 
 /**
  * `suite_reset()` resets a `suite_t` to its initial state, as if it were
@@ -327,14 +328,14 @@ int suite_del(suite_t* s);
 void suite_done(suite_t* s);
 
 /**
- * `suite_add()` adds n testfn to the suite.
+ * `suite_add()` adds n runner_t to the suite.
  **/
 void suite_add(suite_t* s, int n, ...);
 
 /**
- * `suite_addtest()` adds a single `testfn` to the suite.
+ * `suite_add_test()` adds a single `runner_t` to the suite.
  **/
-int suite_addtest(suite_t* s, testfn* f);
+int suite_add_test(suite_t* s, runner_t* f);
 
 /**
  * `suite_run()` runs all tests in the test array.
@@ -370,6 +371,9 @@ typedef struct tdd_result_t {
      **/
     bool ok;
 } tdd_result_t;
+
+tdd_result_t* tdd_result_new(char* name, bool ok);
+int tdd_result_del(tdd_result_t* result);
 
 /**
  * Stats structure detailing results of test suite.
@@ -409,14 +413,15 @@ typedef struct suite_stats_t {
 } suite_stats_t;
 
 /**
- * `suite_stats()` returns a `stats_t*` detailing the results of the testing.
+ * `suite_get_stats()` returns a `stats_t*` detailing the results of the
+ * testing.
  **/
-suite_stats_t* suite_stats(suite_t* s);
+suite_stats_t* suite_get_stats(suite_t* s);
 
 /**
- * `suite_delstats()` frees memory allocated to a `stats_t*` returned by
- * `suite_stats()`
+ * `suite_stats_del()` frees memory allocated to a `stats_t*` returned by
+ * `suite_get_stats()`
  **/
-int suite_delstats(suite_stats_t* stats);
+int suite_stats_del(suite_stats_t* stats);
 
 #endif

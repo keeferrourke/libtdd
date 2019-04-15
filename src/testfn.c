@@ -1,9 +1,8 @@
 /**
- * @file testfn.c
+ * @file runner_t.c
  * @author Keefer Rourke <mail@krourke.org>
- * @date 08 Apr 2018
  * @brief This file contains implementation details of functions pertaining to
- *        using testfn structures for creating simple test suites.
+ *        using runner_t structures for creating simple test suites.
  **/
 #include <errno.h>
 #include <stdarg.h>
@@ -15,12 +14,12 @@
 
 #include "tdd.h"
 
-testfn* newtest(void* (*f)(void* t), char* name, char* desc) {
+runner_t* tdd_runner_new(void* (*f)(void* t), char* name, char* desc) {
     if (name == NULL || f == NULL) {
         return NULL;
     }
 
-    testfn* tf = malloc(sizeof(testfn));
+    runner_t* tf = malloc(sizeof(runner_t));
     if (tf == NULL) {
         errno = ENOMEM;
         return NULL;
@@ -42,6 +41,7 @@ testfn* newtest(void* (*f)(void* t), char* name, char* desc) {
         if (tf->desc) {
             free(tf->desc);
         }
+        free(tf);
         return NULL;
     }
 
@@ -53,7 +53,7 @@ testfn* newtest(void* (*f)(void* t), char* name, char* desc) {
     return tf;
 }
 
-int testfn_del(testfn* tf) {
+int tdd_runner_del(runner_t* tf) {
     if (tf == NULL) return EXIT_FAILURE;
 
     if (tf->name != NULL) {
