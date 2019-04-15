@@ -10,11 +10,11 @@
 
 #include "tdd.h"
 
-static void* test_errfunc(void* t);
-static void* test_failfunc(void* t);
+static void* test_errfn(void* t);
+static void* test_failfn(void* t);
 static void* test_timer(void* t);
-static void* bench_func(void* t);
-static void* test_segvfunc(void* t);
+static void* bench_fn(void* t);
+static void* test_segvfn(void* t);
 
 int main(int argc, char* argv[]) {
     suite_t* s = suite_new();
@@ -24,22 +24,22 @@ int main(int argc, char* argv[]) {
     // new tests are added with a function pointer, a name, and an optional
     // description; if the description is to be omitted, you may pass NULL
     suite_add(s, 2,
-              tdd_runner_new(&test_timer, "test_timer",
+              runner_new(&test_timer, "test_timer",
                       "Manual benchmark. Requires timespan to be printed "
                       "manually."),
-              tdd_runner_new(&bench_func, "bench_func",
+              runner_new(&bench_fn, "bench_fn",
                       "Builtin benchmark (name prefixed by 'bench_')."
                       "Execution timespan is printed automatically below."));
 
     // suite_add_test is a function that simply appends a test to the list of
     // tests in the suite; could be used to programmatically add tests
-    suite_add_test(s, tdd_runner_new(&test_errfunc, "test_errfunc", "Raises error."));
+    suite_add_test(s, runner_new(&test_errfn, "test_errfn", "Raises error."));
 
     // suite_add can be called multiple times to add groups of tests to the
     // test suite
     suite_add(s, 2,
-              tdd_runner_new(&test_failfunc, "test_failfunc", "Fails immediately."),
-              tdd_runner_new(&test_segvfunc, "test_segvfunc", "Raises SIGSEGV."));
+              runner_new(&test_failfn, "test_failfn", "Fails immediately."),
+              runner_new(&test_segvfn, "test_segvfn", "Raises SIGSEGV."));
 
     printf("Running tests ignoring failures.\n");
     suite_run(s, false);
@@ -76,15 +76,13 @@ int main(int argc, char* argv[]) {
     return ret;
 }
 
-void* test_errfunc(void* t) {
+void* test_errfn(void* t) {
     test_error(t, "a non-critical error ocurred.");
     return NULL;
 }
 
-void* test_failfunc(void* t) {
-    test_fail(t, "a critical error occurred!");
-    printf("this code should not run unless fatal failures are disabled!\n");
-    return NULL;
+void* test_failfn(void* t) {
+    return test_fail(t, "a critical error occurred!");
 }
 
 void* test_timer(void* t) {
@@ -98,14 +96,14 @@ void* test_timer(void* t) {
     return NULL;
 }
 
-void* bench_func(void* t) {
+void* bench_fn(void* t) {
     char* s = calloc(128, sizeof(char));
     strcpy(s, "This function is being timed!");
     free(s);
     return NULL;
 }
 
-void* test_segvfunc(void* t) {
+void* test_segvfn(void* t) {
     raise(SIGSEGV);
     return NULL;
 }

@@ -1,5 +1,5 @@
 /**
- * @file runner_t.c
+ * @file runner.c
  * @author Keefer Rourke <mail@krourke.org>
  * @brief This file contains implementation details of functions pertaining to
  *        using runner_t structures for creating simple test suites.
@@ -14,7 +14,7 @@
 
 #include "tdd.h"
 
-runner_t* tdd_runner_new(void* (*f)(void* t), char* name, char* desc) {
+runner_t* runner_new(void* (*f)(void* t), char* name, char* desc) {
     if (name == NULL || f == NULL) {
         return NULL;
     }

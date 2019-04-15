@@ -64,25 +64,25 @@ int tdd_test_del(test_t* t) {
     return EXIT_SUCCESS;
 }
 
-void test_fail(test_t* t, char* msg) {
+void* test_fail(test_t* t, char* msg) {
     t->failed   = true;
     t->fail_msg = calloc(strlen(msg) + 1, sizeof(char));
     strncpy(t->fail_msg, msg, strlen(msg));
 
     clock_gettime(CLOCK_MONOTONIC, t->failed_at);
-    void* retval = NULL
+    void* retval = NULL;
     pthread_join(pthread_self(), &retval);
 
-    return;
+    return NULL;
 }
 
-void test_error(test_t* t, char* msg) {
+void* test_error(test_t* t, char* msg) {
     t->err++;
 
     char** temp = realloc(t->err_msg, sizeof(char*) * (t->err));
     if (!temp) {
         errno = ENOMEM;
-        return;
+        return NULL;
     }
     t->err_msg = temp;
 
@@ -91,15 +91,15 @@ void test_error(test_t* t, char* msg) {
 
     clock_gettime(CLOCK_MONOTONIC, t->error_at);
 
-    return;
+    return NULL;
 }
 
-void test_timer_start(test_t* t) {
+void* test_timer_start(test_t* t) {
     clock_gettime(CLOCK_MONOTONIC, t->start);
-    return;
+    return NULL;
 }
 
-void test_timer_end(test_t* t) {
+void* test_timer_end(test_t* t) {
     clock_gettime(CLOCK_MONOTONIC, t->end);
-    return;
+    return NULL;
 }

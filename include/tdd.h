@@ -14,20 +14,25 @@
  * and create any resource files, etc. that might be expected by tests in the
  * suite.
  *
- * @section example Example usage of this library:
+ * @section example Example usage of this library
+ *
+ * Below is a basic example. See the source code `examples/` directory for
+ * more.
  *
  *```
  *  #include <stdlib.h>
  *  #include "tdd.h"
  *
  *  static void* error_func(test_t* t) {
- *      test_error(t, "oops!");
+ *      test_error(t, "oops I made a mistake!");
+ *      printf("I should keep going though!");
+ *      test_error(t, "oops I made another mistake :(");
  *      return NULL;
  *  }
  *
  *  static void* fail_func(test_t* t) {
- *      test_fail(t, "badness!");
- *      return NULL;
+ *      // always return test_fail to ensure the failure is reported correctly
+ *      return test_fail(t, "I made a critical mistake!");
  *  }
  *
  *  int main(int argc, char* argv[]) {
@@ -36,8 +41,8 @@
  *
  *      // initalize tests
  *      // variadic func; add as many tests as needed
- *      suite_add(s, 2, tdd_runner_new(&error_func, "error", NULL),
- *                tdd_runner_new(&fail_func, "fail", NULL));
+ *      suite_add(s, 2, runner_new(&error_func, "error", NULL),
+ *                runner_new(&fail_func, "fail", NULL));
  *
  *      // run the test suite
  *      suite_run(s);
@@ -45,17 +50,21 @@
  *      suite_del(s);
  *      ...
  *
- *      return stats.n_error
+ *      int retcode = stats.n_error;
+ *      suite_stats_del(stats);
+ *      return retcode;
  *  }
  *```
  *
  * @section api Test API
- * Test functions must always be defined by one of the following signatures:
+ * Test functions should be defined by one of the following signatures:
  *  - `void* test_func(test_t* t);` for regular tests
  *  - `void* bench_func(test_t* t);` for benchmarking tests
  *
  * These functions are added to a test suite using either the `suite_add(...)`
  * or `suite_add_test(runner_t*)` API calls.
+ *
+ * The name of the test when added to the suite matters.
  *
  * @section benchmarking Benchmarking
  * Test functions may be specially marked as time-sensitive, as in where
@@ -64,9 +73,14 @@
  * functions A timer will be started when the test runs, and stopped when the
  * test finishes. A report of the runtime is printed after the test finishes.
  *
- * For example:
+ * For example, the following function is added as a benchmarked function.
  * ```
- * suite_add_test(tdd_runner_new(&bench_func, "bench_func", "time sensitive test"));
+ * suite_add_test(runner_new(&bench_func, "bench_func", "time sensitive test"));
+ * ```
+ *
+ * The following code is added as a regular test. It will not be timed.
+ * ```
+ * suite_add_test(runner_new(&test_func, "test_func", "basic test"));
  * ```
  *
  * @section notes Notes
@@ -122,7 +136,7 @@ typedef struct test_t {
      **/
     int err;
     /**
-     * `fail_msg` is a message that is by test_fail() indicating the reason
+     * `fail_msg` is a message that is by *test_fail() indicating the reason
      * for test failure. Heap allocated.
      **/
     char* fail_msg;
@@ -155,16 +169,16 @@ typedef struct test_t {
      * `fail()` marks the test as failed with a message explaining the reason
      * for failure.
      **/
-    void (*fail)(struct test_t* t, char* msg);
+    void* (*fail)(struct test_t* t, char* msg);
     /**
      * `error()` marks the test as having encountered an error with a message
      * explaining the reason for the error
      **/
-    void (*error)(struct test_t* t, char* msg);
+    void* (*error)(struct test_t* t, char* msg);
     /** `begin()` starts a benchmark timer for the test **/
-    void (*begin)(struct test_t* t);
+    void* (*begin)(struct test_t* t);
     /** `done()` marks the test as finished **/
-    void (*done)(struct test_t* t);
+    void* (*done)(struct test_t* t);
 } test_t;
 
 /**
@@ -193,7 +207,7 @@ int tdd_test_del(test_t* t);
  *	            test failure
  * @param msg - character string indicating the reason for failure
  **/
-void test_fail(test_t* t, char* msg);
+void* test_fail(test_t* t, char* msg);
 
 /**
  * `test_error()` marks the test as having encountered an error. Errors are
@@ -206,21 +220,21 @@ void test_fail(test_t* t, char* msg);
  *  	        test error
  * @param msg - character string indicating the reason for error
  **/
-void test_error(test_t* t, char* msg);
+void* test_error(test_t* t, char* msg);
 
 /**
  * `test_timer_start()` marks the time at which the test started. This may be
  * useful for benchmarking and should be called after any test setup code.
  * @param t - pointer to a `test_t` structure to capture the test finish time
  **/
-void test_timer_start(test_t* t);
+void* test_timer_start(test_t* t);
 
 /**
  * `test_timer_end()` marks the time at which the test finished. This may be
  * useful for benchmarking and should be called before any test teardown code.
  * @param t - pointer to a `test_t` structure to capture the test finish time
  **/
-void test_timer_end(test_t* t);
+void* test_timer_end(test_t* t);
 
 /**
  * Testing function.
@@ -246,7 +260,7 @@ typedef struct runner_s {
 } runner_t;
 
 /**
- * `tdd_runner_new()` creates and returns a pointer to an initialized runner_t.
+ * `runner_new()` creates and returns a pointer to an initialized runner_t.
  * @param f    - a pointer to a function that records information about a test
  *		         within its single `test_t*` argument
  * @param name - a character string identifier for the test; usually the name
@@ -254,14 +268,16 @@ typedef struct runner_s {
  * @param desc - a human readable description of the test; can be `NULL`
  * @return A pointer to a fully initialized runner_t structure.
  **/
-runner_t* tdd_runner_new(void* (*f)(void* t), char* name, char* desc);
+runner_t* runner_new(void* (*f)(void* t), char* name, char* desc);
 
 /**
- * `runner_del()` frees memory allocated to a test function.
- * @param tf - a pointer to a `runner_t` that is to be destroyed
+ * `runner_del()` frees memory allocated to a test function. Should not be
+ * called manually.
+ * @private
+ * @param tr - a pointer to a `runner_t` that is to be destroyed
  * @return`EXIT_SUCCESS`, otherwise `EXIT_FAILURE` if tf is `NULL`.
  **/
-int tdd_runner_del(runner_t* tf);
+int tdd_runner_del(runner_t* tr);
 
 /**
  * Testing suite. Contains all tests, current runtime state, and the results
