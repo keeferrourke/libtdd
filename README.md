@@ -23,6 +23,24 @@ Features
 Build and usage
 ---------------
 
+### Meson
+
+To build this library, run
+
+    meson setup --prefix=/usr/local _build
+    ninja -C _build
+
+To install the library, run
+
+    ninja -C _build install
+
+#### Build options
+
+Build options are detailed in the `meson_options.txt` file.
+You may modify them there as required.
+
+### Make
+
 The Makefile included with this project creates static and dynamic
 libraries in the `lib/` directory. To build this, simply run:
 
