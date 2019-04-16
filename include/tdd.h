@@ -460,7 +460,24 @@ typedef struct tdd_result_t {
     bool ok;
 } tdd_result_t;
 
+/**
+ * `tdd_result_new()` creates and returns a pointer to a new `tdd_result_t`.
+ * Must be freed with `tdd_result_del()`.
+ * @private
+ * @internal
+ *
+ * @return A pointer to a fully intialized `tdd_result_t` structure.
+ **/
 tdd_result_t* tdd_result_new(char* name, bool ok);
+
+/**
+ * `tdd_result_del()` frees memory allocated to a `tdd_result_t` struct.
+ * @private
+ * @internal
+ *
+ * @param result - a pointer to a `tdd_result_t` that is to be destroyed
+ * @return EXIT_SUCCESS if successful, EXIT_FAILURE otherwise
+ **/
 int tdd_result_del(tdd_result_t* result);
 
 /**
