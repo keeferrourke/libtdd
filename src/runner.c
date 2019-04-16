@@ -19,50 +19,50 @@ runner_t* runner_new(void* (*f)(void* t), char* name, char* desc) {
         return NULL;
     }
 
-    runner_t* tf = malloc(sizeof(runner_t));
-    if (tf == NULL) {
+    runner_t* runner = malloc(sizeof(runner_t));
+    if (runner == NULL) {
         errno = ENOMEM;
         return NULL;
     }
 
-    tf->name = calloc(strlen(name) + 1, sizeof(char));
+    runner->name = calloc(strlen(name) + 1, sizeof(char));
     if (desc != NULL) {
-        tf->desc = calloc(strlen(desc) + 1, sizeof(char));
+        runner->desc = calloc(strlen(desc) + 1, sizeof(char));
     } else {
-        tf->desc = calloc(1, sizeof(char)); /* empty string */
+        runner->desc = calloc(1, sizeof(char)); /* empty string */
     }
-    tf->fn = f;
+    runner->fn = f;
 
-    if (tf->name == NULL || tf->desc == NULL) {
+    if (runner->name == NULL || runner->desc == NULL) {
         errno = ENOMEM;
-        if (tf->name) {
-            free(tf->name);
+        if (runner->name) {
+            free(runner->name);
         }
-        if (tf->desc) {
-            free(tf->desc);
+        if (runner->desc) {
+            free(runner->desc);
         }
-        free(tf);
+        free(runner);
         return NULL;
     }
 
-    strncpy(tf->name, name, strlen(name));
+    strncpy(runner->name, name, strlen(name));
     if (desc != NULL) {
-        strncpy(tf->desc, desc, strlen(desc));
+        strncpy(runner->desc, desc, strlen(desc));
     }
 
-    return tf;
+    return runner;
 }
 
-int tdd_runner_del(runner_t* tf) {
-    if (tf == NULL) return EXIT_FAILURE;
+int tdd_runner_del(runner_t* runner) {
+    if (runner == NULL) return EXIT_FAILURE;
 
-    if (tf->name != NULL) {
-        free(tf->name);
+    if (runner->name != NULL) {
+        free(runner->name);
     }
-    if (tf->desc != NULL) {
-        free(tf->desc);
+    if (runner->desc != NULL) {
+        free(runner->desc);
     }
-    free(tf);
+    free(runner);
 
     return EXIT_SUCCESS;
 }
