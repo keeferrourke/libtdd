@@ -1,17 +1,36 @@
 /**
  * @file stats.c
  * @author Keefer Rourke <mail@krourke.org>
- * @data 28 Apr 2018
  * @brief This file contains implementation details of functions pertaining to
  *      the suite_stats_t used for reporting results from test suites.
  */
 #include <errno.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 
 #include "tdd.h"
 
-suite_stats_t* suite_stats(suite_t* s) {
+tdd_result_t* tdd_result_new(char* name, bool ok) {
+    tdd_result_t* r = malloc(sizeof(tdd_result_t));
+
+    r->name = calloc(strlen(name)+1, sizeof(char));
+    strcpy(r->name, name);
+    r->ok = ok;
+
+    return r;
+}
+
+int tdd_result_del(tdd_result_t* result) {
+    if (result == NULL) return EXIT_FAILURE;
+
+    free(result->name);
+    free(result);
+
+    return EXIT_SUCCESS;
+}
+
+suite_stats_t* suite_get_stats(suite_t* s) {
     if (s == NULL) return NULL;
 
     suite_stats_t* stats = malloc(sizeof(suite_stats_t));
@@ -19,12 +38,8 @@ suite_stats_t* suite_stats(suite_t* s) {
 
     int nerr = 0, nfail = 0;
     for (int i = 0; i < s->test_index; i++) {
-        testfn* t = s->tests[i];
-        stats->tests_run[i] = malloc(sizeof(tdd_result_t));
-        stats->tests_run[i]->name =
-            malloc(sizeof(char) * (strlen(t->name) + 1));
-        stats->tests_run[i]->ok = !(s->results[i]->failed);
-        strcpy(stats->tests_run[i]->name, t->name);
+        runner_t* t           = s->tests[i];
+        stats->tests_run[i] = tdd_result_new(t->name, s->results[i]->failed);
 
         test_t* r = s->results[i];
         if (r->err != 0) nerr++;
@@ -38,11 +53,11 @@ suite_stats_t* suite_stats(suite_t* s) {
     return stats;
 }
 
-int suite_delstats(suite_stats_t* stats) {
+int suite_stats_del(suite_stats_t* stats) {
     if (stats == NULL) return EXIT_FAILURE;
 
     for (int i = 0; i < stats->n_ran; i++) {
-        free(stats->tests_run[i]);
+        tdd_result_del(stats->tests_run[i]);
     }
     free(stats->tests_run);
     free(stats);

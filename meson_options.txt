@@ -1,2 +1,6 @@
-option('posix_c_source', type: 'string', value: '199506L', description: 'Value for _X_POSIX_C_SOURCE')
-option('use_colour_output', type: 'boolean', value: true, description: 'Enables coloured test output')
+option('posix_c_source',     type: 'string',  value: '199506L', description: 'Value for _X_POSIX_C_SOURCE')
+option('use_colour_output',  type: 'boolean', value: true,      description: 'Enables coloured test output')
+option('build_examples',     type: 'boolean', value: false,     description: 'Builds example binaries as well')
+option('generate_man_pages', type: 'boolean', value: true,      description: 'Generate man pages from documentation')
+option('generate_html_docs', type: 'boolean', value: true,      description: 'Generate html documentation')
+option('generate_pdf_docs',  type: 'boolean', value: true,      description: 'Generate pdf documentation')

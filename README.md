@@ -30,9 +30,9 @@ To build this library, run
     meson setup --prefix=/usr/local _build
     ninja -C _build
 
-To install the library, run
+To install the library and documentation, run
 
-    ninja -C _build install
+    ninja -C _build all docs install
 
 #### Build options
 
@@ -65,6 +65,7 @@ See the Makefile for other relevant build targets.
 This library was built and tested on Fedora 27 Workstation with glibc
 v2.26.
 
+
 Example program
 ---------------
 
@@ -91,23 +92,31 @@ of each test. The parameter and return types are `void*` because tests
 are run in `pthreads`. Despite this, there is no need to cast `t` when
 calling the provided API functions.
 
-The start of a test is signified by `test_start(t)` and the end
-of a test is signified by `test_done(t)`, but these calls are completely
-optional if only testing for correctness and not speed.
+A test is assumed to have succeeded if it runs to completion without
+raising any failure or error flags. A test can be marked as a failure
+by a call to `test_fail(t, "reason")`; you should return from the test
+function shortly after this call is made. Non-critical errors that
+should not end a test can be recorded by `test_error(t, "reason")`.
 
-You can end the execution of a test early and mark it as a failure
-through a call to `test_fail(t, "message")`. Non-critical errors that
-should not end a test can be recorded by `test_error(t, "message")`.
+The macro `test_fatal(t, "reason")` exists for convenience so you don't
+need to return from a failure condition (this is handled automatically)
+but should be used sparingly as you won't have an opportunity to run
+clean-up code if it executes.
+
+The start of a test can be optionally flagged by `test_timer_start(t)`
+and the end the test can be similarly flagged by `test_timer_end(t)`,
+if the name of your test is prefixed by `bench_` then these functions
+will be called for you automatically.
 
 ### Benchmarking
 
-If benchmarking, then for convenience, the `test_start(t)` and
-`test_done(t)` function calls may be omitted within a test body if the
-test name is prefixed by `bench_`. These times will be automatically
+If benchmarking, then for convenience, the `test_timer_start(t)` and
+`test_timer_end(t)` function calls may be omitted within a test body if
+the test name is prefixed by `bench_`. These times will be automatically
 recorded by the suite.
 
-Calls to `test_start(t)` and `test_done(t)` may still be made to
-override the start and end times if the benchmarks require setup and
+Calls to `test_timer_start(t)` and `test_timer_end(t)` may still be made
+to override the start and end times if the benchmarks require setup and
 teardown code that should not be included in the recorded time.
 
 i.e. a benchmarking function may be simply defined as
@@ -131,17 +140,21 @@ Bugs and future development
 No bugs to speak of at this moment :)
 
 Future development:
+
  * It might be nice to optionally run tests in parallel; currently all
    tests run sequentially in the order they are added to the suite.
+ * I'll probably factor out the reporter interface so that new reporters
+   can be written and used to display results
 
 
 License information
 -------------------
 
-Copyright (c) 2018 Keefer Rourke <mail@krourke.org>
+Copyright (c) 2018-2019 Keefer Rourke <mail@krourke.org>
 
 This software is released under the ISC License. See LICENSE for more
 details.
+
 
 Alternatives
 ------------
