@@ -105,7 +105,7 @@ void suite_add(suite_t* s, int n, ...) {
     return;
 }
 
-int suite_add_test(suite_t* s, runner_t* fn) {
+int suite_add_test(suite_t* s, runner_t* r) {
     if (s == NULL) return EXIT_FAILURE;
 
     s->n_tests++;
@@ -120,7 +120,7 @@ int suite_add_test(suite_t* s, runner_t* fn) {
         return EXIT_FAILURE;
     }
     s->tests                 = tmp_tests;
-    s->tests[s->n_tests - 1] = fn;
+    s->tests[s->n_tests - 1] = r;
 
     /* grow results array with the tests */
     test_t** tmp_results = realloc(s->results, sizeof(test_t*) * s->n_tests);
