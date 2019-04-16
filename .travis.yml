@@ -1,0 +1,33 @@
+sudo: false
+language: c
+
+os:
+  - linux
+  - osx
+dist: xenial
+osx_image: xcode10.2
+
+env:
+  - CC=gcc
+  - CC=clang
+
+addons:
+  apt:
+    packages:
+      - clang-format
+  homebrew:
+    packages:
+      - ninja
+      - meson
+      - clang-format
+
+before_install:
+  - |+
+      if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
+        sudo apt-get -q update
+        sudo apt-get -y install meson/xenial-backports
+      fi
+
+script:
+  - meson _build
+  - ninja -C _build all

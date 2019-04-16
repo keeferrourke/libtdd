@@ -2,8 +2,9 @@ project('libtdd', 'c', version: '1.0.0', license: 'ISC',
     default_options: [
         'c_std=c99',
 ])
-if (posix_c_source = get_option('posix_c_source')) != ''
-    add_global_arguments('-D_X_POSIX_C_SOURCE='+posix_c_source,
+posix_c_source = get_option('posix_c_source')
+if posix_c_source != ''
+    add_global_arguments('-D_POSIX_C_SOURCE='+posix_c_source,
                          language: 'c')
 endif
 
@@ -19,16 +20,6 @@ cdata.set('TOP_SRC_DIR', meson.source_root())
 cdata.set('INCLUDE_DIR', join_paths(meson.source_root(), 'include'))
 cdata.set('DOCS_OUTPUT_DIR', join_paths(meson.build_root(), 'docs'))
 cdata.set('README_PATH', join_paths(meson.source_root(), 'REAMDE.md'))
-cdata.set('HAS_DOT', find_program('dot').found() ? 'YES' : 'NO')
-cdata.set('HTML_PAGES', get_option('generate_html_docs') ? 'YES' : 'NO')
-cdata.set('GEN_LATEX', get_option('generate_pdf_docs') ? 'YES' : 'NO')
-if get_option('generate_man_pages')
-    cdata.set('MAN_PAGES', 'YES')
-    man_dir = join_paths(cdata.get('DOCS_OUTPUT_DIR'), 'man', 'man3')
-    install_subdir(man_dir, install_dir: 'man')
-else
-    cdata.set('MAN_PAGES', 'NO')
-endif
 
 threads = dependency('threads')
 
@@ -41,7 +32,23 @@ example_sources = []
 
 subdir('src')       # populate project_sources
 subdir('include')   # populate project_includes
-subdir('docs')      # create documentation
+
+
+# if doxygen found, generate documentation
+doxygen = find_program('doxygen', required: false)
+if doxygen.found()
+  cdata.set('HAS_DOT', find_program('dot', required: false).found() ? 'YES' : 'NO')
+  cdata.set('HTML_PAGES', get_option('generate_html_docs') ? 'YES' : 'NO')
+  cdata.set('GEN_LATEX', get_option('generate_pdf_docs') ? 'YES' : 'NO')
+  if get_option('generate_man_pages')
+      cdata.set('MAN_PAGES', 'YES')
+      man_dir = join_paths(cdata.get('DOCS_OUTPUT_DIR'), 'man', 'man3')
+      install_subdir(man_dir, install_dir: 'man')
+  else
+      cdata.set('MAN_PAGES', 'NO')
+  endif
+  subdir('docs') 
+endif
 
 project_headers += project_api_headers
 
@@ -49,7 +56,6 @@ install_headers(project_api_headers)
 lib = library('tdd', install: true, sources: project_sources,
     include_directories: project_includes, dependencies: threads)
 
-configure_file(input: '.clang-format', output: '.clang-format', copy: true)
 run_target('format', command: [
     'clang-format',
     '-i',
