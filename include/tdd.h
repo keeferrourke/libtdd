@@ -31,8 +31,16 @@
  *  }
  *
  *  static void* fail_func(test_t* t) {
- *      // always return test_fail to ensure the failure is reported correctly
- *      return test_fail(t, "I made a critical mistake!");
+ *      ...
+ *      test_fail(t, "I made a critical mistake!");
+ *      // clean up code
+ *      return NULL;
+ *  }
+ *
+ *  static void* fatal_func(test_t* t) {
+ *      test_fatal(t, "I made a critical mistake!");
+ *      printf("this code will not be reached");
+ *      return NULL;
  *  }
  *
  *  int main(int argc, char* argv[]) {
@@ -41,8 +49,10 @@
  *
  *      // initalize tests
  *      // variadic func; add as many tests as needed
- *      suite_add(s, 2, runner_new(&error_func, "error", NULL),
- *                runner_new(&fail_func, "fail", NULL));
+ *      suite_add(s, 3,
+ *                runner_new(&error_func, "error", NULL),
+ *                runner_new(&fail_func, "fail", NULL),
+ *                runner_new(&fatal_func, "fatal ends early", NULL));
  *
  *      // run the test suite
  *      suite_run(s);
