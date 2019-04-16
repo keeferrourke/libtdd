@@ -233,6 +233,14 @@ void* test_timer_start(test_t* t);
 void* test_timer_end(test_t* t);
 
 /**
+ * `test_fatal()` is a convenience macro that will fail and end a test.
+ * @param t   - pointer to a `test_t` structure to capture the context of a
+ *	            test failure
+ * @param msg - character string indicating the reason for failure
+ */
+#define test_fatal(t, msg) return test_fail(t, msg);
+
+/**
  * Testing function.
  **/
 typedef struct runner_t {

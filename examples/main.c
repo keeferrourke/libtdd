@@ -82,7 +82,9 @@ void* test_errfn(void* t) {
 }
 
 void* test_failfn(void* t) {
-    return test_fail(t, "a critical error occurred!");
+    test_fatal(t, "a critical error occurred!");
+    printf("this code will not be reached!");
+    return NULL;
 }
 
 void* test_timer(void* t) {
