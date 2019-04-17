@@ -19,7 +19,7 @@ cdata.set('VERSION', meson.project_version())
 cdata.set('TOP_SRC_DIR', meson.source_root())
 cdata.set('INCLUDE_DIR', join_paths(meson.source_root(), 'include'))
 cdata.set('DOCS_OUTPUT_DIR', join_paths(meson.build_root(), 'docs'))
-cdata.set('README_PATH', join_paths(meson.source_root(), 'REAMDE.md'))
+cdata.set('README_PATH', join_paths(meson.source_root(), 'README.md'))
 
 threads = dependency('threads')
 
@@ -30,16 +30,20 @@ project_includes = []
 project_objects = []
 example_sources = []
 
-subdir('src')       # populate project_sources
-subdir('include')   # populate project_includes
+src_dir = 'src'
+include_dir = 'include'
+
+subdir(src_dir)       # populate project_sources
+subdir(include_dir)   # populate project_includes
 
 
 # if doxygen found, generate documentation
 doxygen = find_program('doxygen', required: false)
+pdflatex = find_program('pdflatex', required: false)
 if doxygen.found()
   cdata.set('HAS_DOT', find_program('dot', required: false).found() ? 'YES' : 'NO')
   cdata.set('HTML_PAGES', get_option('generate_html_docs') ? 'YES' : 'NO')
-  cdata.set('GEN_LATEX', get_option('generate_pdf_docs') ? 'YES' : 'NO')
+  cdata.set('GEN_LATEX', get_option('generate_pdf_docs') and pdflatex.found() ? 'YES' : 'NO')
   if get_option('generate_man_pages')
       cdata.set('MAN_PAGES', 'YES')
       man_dir = join_paths(cdata.get('DOCS_OUTPUT_DIR'), 'man', 'man3')
@@ -47,7 +51,7 @@ if doxygen.found()
   else
       cdata.set('MAN_PAGES', 'NO')
   endif
-  subdir('docs') 
+  subdir('docs')
 endif
 
 project_headers += project_api_headers
@@ -63,6 +67,17 @@ run_target('format', command: [
     project_sources,
     project_headers,
     example_sources
+])
+
+run_target('cppcheck', command: [
+    'cppcheck',
+    '--enable=all',
+    '--language=c',
+    '--std='+get_option('c_std'),
+    '--suppress=missingInclude',
+    '--suppress=unusedFunction',
+    src_dir,
+    '-i', include_dir
 ])
 
 subdir('examples')
