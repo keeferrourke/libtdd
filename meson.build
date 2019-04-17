@@ -1,4 +1,4 @@
-project('libtdd', 'c', version: '1.0.0', license: 'ISC',
+project('libtdd', 'c', version: '0.0.2', license: 'ISC',
     default_options: [
         'c_std=c99',
 ])

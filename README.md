@@ -3,6 +3,7 @@ libtdd
 
 [![repo ci status](https://img.shields.io/travis/keeferrourke/libtdd.svg)
 ![dev ci status](https://img.shields.io/travis/com/keeferrourke/libtdd/development.svg?label=build%20%28dev%29)](https://travis-ci.com/keeferrourke/libtdd)
+[![v0.0.2](https://img.shields.io/badge/version-0.0.2%20%28alpha%29-blue.svg)](#)
 
 `libtdd` is a minimalist testing framework inspired by the Golang
 testing pkg. It is designed to provide a framework which may be used to
