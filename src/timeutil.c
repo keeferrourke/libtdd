@@ -1,8 +1,7 @@
 /**
  * @file timeutil.h
  * @author Keefer Rourke <mail@krourke.org>
- * @date 08 Apr 2018
- * @brief Time format and manipulation functions and macros for libtdd.
+ * @brief Time format and manipulation functions and macros.
  * @private
  */
 #include <stdlib.h>

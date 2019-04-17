@@ -1,7 +1,6 @@
 /**
  * @file suite.c
  * @author Keefer Rourke <mail@krourke.org>
- * @date 08 Apr 2018
  * @brief This file contains implementation details of functions pertaining to
  *        using suite_t structures for managing simple test suites.
  **/
@@ -13,13 +12,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/types.h>
 #include <time.h>
 
 #include "strutil.h"
 #include "tdd.h"
 #include "timeutil.h"
 
-suite_t* suite_init() {
+suite_t* suite_new() {
     suite_t* s = malloc(sizeof(suite_t));
     if (s == NULL) {
         errno = ENOMEM;
@@ -45,7 +45,7 @@ void suite_reset(suite_t* s) {
     s->test_index = 0;
 
     for (int i = 0; i < s->n_tests; i++) {
-        test_t_del(s->results[i]);
+        tdd_test_del(s->results[i]);
         s->results[i] = NULL;
     }
 
@@ -56,8 +56,8 @@ int suite_del(suite_t* s) {
     if (s == NULL) return EXIT_FAILURE;
 
     for (int i = 0; i < s->n_tests; i++) {
-        testfn_del(s->tests[i]);
-        test_t_del(s->results[i]);
+        tdd_runner_del(s->tests[i]);
+        tdd_test_del(s->results[i]);
     }
     free(s->tests);
     free(s->results);
@@ -80,7 +80,7 @@ void suite_add(suite_t* s, int n, ...) {
 
     /* update the test count and realloc test and result arrays */
     s->n_tests += n;
-    testfn** tmp_tests = realloc(s->tests, sizeof(testfn*) * s->n_tests);
+    runner_t** tmp_tests = realloc(s->tests, sizeof(runner_t*) * s->n_tests);
     if (!tmp_tests) {
         errno = ENOMEM;
         return;
@@ -98,20 +98,20 @@ void suite_add(suite_t* s, int n, ...) {
     va_list ap;
     va_start(ap, n);
     for (int i = old_index; i < s->n_tests; i++) {
-        s->tests[i] = va_arg(ap, testfn*);
+        s->tests[i] = va_arg(ap, runner_t*);
     }
     va_end(ap);
 
     return;
 }
 
-int suite_addtest(suite_t* s, testfn* fn) {
+int suite_add_test(suite_t* s, runner_t* r) {
     if (s == NULL) return EXIT_FAILURE;
 
     s->n_tests++;
 
-    /* reallocate array and add new testfn */
-    testfn** tmp_tests = realloc(s->tests, sizeof(testfn*) * s->n_tests);
+    /* reallocate array and add new runner_t */
+    runner_t** tmp_tests = realloc(s->tests, sizeof(runner_t*) * s->n_tests);
     if (tmp_tests == NULL) {
         if (s->tests != NULL) {
             free(s->tests);
@@ -120,7 +120,7 @@ int suite_addtest(suite_t* s, testfn* fn) {
         return EXIT_FAILURE;
     }
     s->tests                 = tmp_tests;
-    s->tests[s->n_tests - 1] = fn;
+    s->tests[s->n_tests - 1] = r;
 
     /* grow results array with the tests */
     test_t** tmp_results = realloc(s->results, sizeof(test_t*) * s->n_tests);
@@ -155,8 +155,8 @@ int suite_next(suite_t* s, bool fatal_failures) {
     if (s == NULL) return EXIT_FAILURE;
 
     /* set up test */
-    testfn* test = s->tests[s->test_index];
-    test_t* t    = test_t_init(test->name);
+    runner_t* test = s->tests[s->test_index];
+    test_t*   t    = tdd_test_new(test->name);
 
     bool bench = false;
     if (__hasprefix(test->name, "bench_")) {
@@ -170,28 +170,28 @@ int suite_next(suite_t* s, bool fatal_failures) {
     sa.sa_handler = &tdd_sigsegv_handler;
     if (sigaction(SIGSEGV, &sa, NULL) == -1) {
         perror("sigaction");
-        test_t_del(t);
+        tdd_test_del(t);
         return EXIT_FAILURE;
     }
 
     /* run test */
     if (bench) {
-        test_start(t);
+        test_timer_start(t);
     }
     pthread_t thread;
     if (pthread_create(&thread, NULL, test->fn, t) != 0) {
         fprintf(stderr, "Could not create thread!\n");
-        test_t_del(t);
+        tdd_test_del(t);
         return EXIT_FAILURE;
     }
     void* retval = NULL;
     if (pthread_join(thread, &retval) != 0) {
         fprintf(stderr, "Could not join with thread!\n");
-        test_t_del(t);
+        tdd_test_del(t);
         return EXIT_FAILURE;
     }
     if (bench && t->end->tv_sec == 0 && t->end->tv_nsec == 0) {
-        test_done(t);
+        test_timer_end(t);
     }
     if (crash_count != tdd_sigsegv_caught) {
         t->failed = true;
