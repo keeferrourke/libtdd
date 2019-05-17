@@ -29,7 +29,7 @@ int main(int argc, char* argv[]) {
                    "Manual benchmark. Requires timespan to be printed "
                    "manually."),
         runner_new(&bench_fn, "bench_fn",
-                   "Builtin benchmark (name prefixed by 'bench_')."
+                   "Builtin benchmark (name prefixed by 'bench_').\n"
                    "Execution timespan is printed automatically below."));
 
     // suite_add_test is a function that simply appends a test to the list of
@@ -47,7 +47,7 @@ int main(int argc, char* argv[]) {
     if (s->finished) {
         printf("Suite ran all tests.\n");
     } else {
-        printf("Suite only ran %d tests.\n", s->test_index + 1);
+        printf("Suite only ran %d tests.\n", s->test_index);
     }
     printf("Suite encountered: %d segmentation faults.\n", s->n_segv);
     printf("\n");
@@ -61,7 +61,7 @@ int main(int argc, char* argv[]) {
     if (s->finished) {
         printf("Suite ran all tests.\n");
     } else {
-        printf("Suite only ran %d tests.\n", s->test_index + 1);
+        printf("Suite only ran %d tests.\n", s->test_index);
     }
 
     // print summary statistics
