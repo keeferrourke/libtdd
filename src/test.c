@@ -24,13 +24,13 @@ test_t* tdd_test_new(const char* name) {
     t->fail_msg = NULL;
     t->err_msg  = NULL;
 
-    /* initialize all time values to 0 */
+    /* Initialize all time values to 0. */
     t->start     = calloc(1, sizeof(struct timespec));
     t->end       = calloc(1, sizeof(struct timespec));
     t->failed_at = calloc(1, sizeof(struct timespec));
     t->error_at  = calloc(1, sizeof(struct timespec));
 
-    /* set alternative interface for fail, error, done cases (more OO-like) */
+    /* Set alternative interface for fail, error, done cases. */
     t->fail  = &test_fail;
     t->error = &test_error;
     t->begin = &test_timer_start;

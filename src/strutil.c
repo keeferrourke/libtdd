@@ -12,9 +12,9 @@
 
 #include "strutil.h"
 
-/* set formattijng for output */
+/* Set formattijng for output. */
 #if defined(USE_COLOUR) || defined(USE_COLOR)
-/* using colour, so define macros as ANSI escape sequences */
+/* Using colour, so define macros as ANSI escape sequences. */
 #define TEXT_RESET "\033[0m"    /* Default text */
 #define TEXT_RED "\033[31m"     /* Red */
 #define TEXT_GREEN "\033[32m"   /* Green */
@@ -33,7 +33,7 @@
 #define ATTENTION TEXT_RESET TEXT_CYAN
 
 #else
-/* not using colour, so define macros as empty strings to nullify effect */
+/* Not using colour, so define macros as empty strings to nullify effect. */
 #define TEXT_RESET ""
 #define TEXT_RED ""
 #define TEXT_GREEN ""

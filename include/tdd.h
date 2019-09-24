@@ -110,15 +110,10 @@
 #include <sys/types.h>
 #include <time.h>
 
-/**
- * `tdd_sigsegv_caught` is a counter for the number of crashes that were
- * encountered in the test suite.
- */
+/** A crash counter. **/
 extern volatile sig_atomic_t tdd_sigsegv_caught;
 
-/**
- * Crash handler.
- **/
+/** Crash handler. **/
 void tdd_sigsegv_handler(int sig);
 
 /**
@@ -131,75 +126,72 @@ void tdd_sigsegv_handler(int sig);
  * `test_fail(t)`, or `test_fatal(t)` respectively.
  **/
 typedef struct test_t {
-    /**
-     * `name` is a character string that describes the test result.
-     **/
+    /** A character string that describes the test result. **/
     const char* name;
-    /**
-     * `failed` is a boolean flag specifying if the current test has failed.
-     **/
+    /** A boolean flag specifying if the current test has failed. **/
     bool failed;
     /**
-     * `err` is a integer flag specifying the number of errors the current
-     * test has encountered.
+     * An integer flag specifying the number of errors the current test has
+     * encountered.
      **/
     int err;
     /**
-     * `fail_msg` is the message that is set by test_fail() indicating the
-     * reason for test failure. Heap allocated.
+     * The message that is set by test_fail() indicating the reason for test
+     * failure. Heap allocated.
      **/
     char* fail_msg;
     /**
-     * `err_msg` is an array of character strings that is appended to on each
-     * call to test_error(). Each string in this array corresponds to the
-     * reason for errors in order of occurance. Each string is Heap allocated.
+     * An array of character strings that is appended to on each call to
+     * test_error(). Each string in this array corresponds to the reason for
+     * errors in order of occurance. Each string is Heap allocated.
      **/
     char** err_msg;
-    /**
-     * `start` is the timestamp at which the test was started. Heap allocated.
-     **/
+    /** The timestamp at which the test was started. Heap allocated. **/
     struct timespec* start;
     /**
-     * `end` is the timestamp at which the test was marked as done. Heap
-     * allocated.
+     * The timestamp at which the test was marked as done. Heap allocated.
      **/
     struct timespec* end;
     /**
-     * `failed_at` is the timestamp at which the test last encountered a
-     * failure. Heap allocated.
+     * The timestamp at which the test last encountered a failure. Heap
+     * allocated.
      **/
     struct timespec* failed_at;
     /**
-     * `error_at` is the timestamp at which the test last encountered an
-     * error. Heap allocated.
+     * The timestamp at which the test last encountered an error. Heap
+     * allocated.
      **/
     struct timespec* error_at;
     /**
-     * `fail()` marks the test as failed with a message explaining the reason
-     * for failure.
+     * Marks the test as failed with a message explaining the reason for
+     * failure.
+     *
      * @see test_fail
      **/
     void* (*fail)(struct test_t* t, char* msg);
     /**
-     * `error()` marks the test as having encountered an error with a message
-     * explaining the reason for the error
+     * Marks the test as having encountered an error with a message explaining
+     * the reason for the error.
+     *
      * @see test_error
      **/
     void* (*error)(struct test_t* t, char* msg);
     /**
-     * `begin()` starts a benchmark timer for the test
+     * Starts a benchmark timer for the test.
+     *
      * @see test_timer_start
      **/
     void* (*begin)(struct test_t* t);
     /**
-     * `done()` marks the test as finished
+     * Marks the test as finished.
+     *
      * @see test_timer_end
      **/
     void* (*done)(struct test_t* t);
 } test_t;
 
 /**
- * `tdd_test_new()` makes a new test function. Not to be called explicitly.
+ * Creates a new test function. Not to be called explicitly.
  * @private
  *
  * @return A pointer to a fully initialized `test_t` structure.
@@ -207,8 +199,8 @@ typedef struct test_t {
 test_t* tdd_test_new();
 
 /**
- * `tdd_test_del()` frees all memory associated with a `test_t` structure.
- * Not to be called explicitly.
+ * Frees all memory associated with a `test_t` structure.  Not to be called
+ * explicitly.
  * @private
  *
  * @param t - pointer to the `test_t` structure to be freed
@@ -217,7 +209,7 @@ test_t* tdd_test_new();
 int tdd_test_del(test_t* t);
 
 /**
- * `test_fatal()` is a convenience macro that will fail and end a test.
+ * Convenience macro that will fail and end a test.
  *
  * @param t   - pointer to a `test_t` structure to capture the context of a
  *	            test failure
@@ -226,7 +218,7 @@ int tdd_test_del(test_t* t);
 #define test_fatal(t, msg) return test_fail(t, msg);
 
 /**
- * `test_fail()` marks the test as failed with a message.
+ * Marks the test as failed with a message.
  *
  * Failures are identified as critical errors that will not allow testing to
  * continue.  Use `test_fail()` to catch fundamental errors in program
@@ -240,7 +232,7 @@ int tdd_test_del(test_t* t);
 void* test_fail(test_t* t, char* msg);
 
 /**
- * `test_error()` marks the test as having encountered an error.
+ * Marks the test as having encountered an error.
  *
  * Errors are identified as non-critical flaws in program function execution
  * which do not prevent continuation of testing. Use `test_error()` to record
@@ -255,7 +247,7 @@ void* test_fail(test_t* t, char* msg);
 void* test_error(test_t* t, char* msg);
 
 /**
- * `test_timer_start()` marks the time at which the test started.
+ * Marks the time at which the test started.
  *
  * This may be useful for benchmarking and should be called after any test
  * setup code.
@@ -265,7 +257,7 @@ void* test_error(test_t* t, char* msg);
 void* test_timer_start(test_t* t);
 
 /**
- * `test_timer_end()` marks the time at which the test finished.
+ * Marks the time at which the test finished.
  *
  * This may be useful for benchmarking and should be called before any test
  * teardown code.
@@ -279,22 +271,22 @@ void* test_timer_end(test_t* t);
  **/
 typedef struct runner_t {
     /**
-     * `name` is a character string identifier for a test.
+     * A character string identifier for a test.
      *
-     * It is usually just the name of the unit itself itself under test. e.g.
-     * if you are testing a function called `foo`, then this runner_t::name
-     * should be `test_foo` by convention.
+     * It is usually just the name of the unit itself under test. e.g.  if you
+     * are testing a function called `foo`, then this runner_t::name should be
+     * `test_foo` by convention.
      */
     char* name;
     /**
-     * `desc` is a character string description for a test.
+     * Is a character string description for a test.
      *
      * It should be a humanly readable explanation of what the test is
      * performing. Optional field in constructor.
      */
     char* desc;
     /**
-     * `fn` is a pointer to a test function.
+     * A pointer to a test function.
      *
      * @param t - pointer to a `test_t` structure to capture context of test
      *		      results
@@ -303,7 +295,7 @@ typedef struct runner_t {
 } runner_t;
 
 /**
- * `runner_new()` creates and returns a pointer to an initialized runner_t.
+ * Creates and initializes a runner_t.
  *
  * @param f    - a pointer to a function that records information about a test
  *		         within its single `test_t*` argument
@@ -315,8 +307,7 @@ typedef struct runner_t {
 runner_t* runner_new(void* (*f)(void* t), char* name, char* desc);
 
 /**
- * `runner_del()` frees memory allocated to a test function.
- * Should not be called manually.
+ * Frees memory allocated to a runner. Should not be called manually.
  *
  * @private
  * @param tr - a pointer to a `runner_t` that is to be destroyed
@@ -330,36 +321,28 @@ int tdd_runner_del(runner_t* tr);
  **/
 typedef struct suite_t {
     /**
-     * `finished` is a boolean flag specifying if all tests have run.
+     * A boolean flag specifying if all tests have run.
      *
      * If this flag is not set by the time the suite has completed all tests,
-     * then it aborted testing with a fatal failure from one of the tests in
-     * the suite.
+     * then the suite must have aborted testing with a fatal failure from one
+     * of the tests in the suite.
      **/
     bool finished;
-    /**
-     * `n_tests` is the number of tests in the suite.
-     **/
+    /** The number of tests in the suite. **/
     int n_tests;
-    /**
-     * `n_segv` is the number of segmentation faults that were caught.
-     **/
+    /** The number of segmentation faults that were caught. **/
     int n_segv;
-    /**
-     * `test_index` is the index of the current test.
-     **/
+    /** The index of the current test in the collection of tests to run. **/
     int test_index;
-    /**
-     * `tests` is an array of runner_t* that make up the suite.
-     **/
+    /** An array of runner_t* that make up the suite. **/
     runner_t** tests;
     /**
-     * `results` is an array of `test_t*` that details testing results for
-     * each element in tests.
+     * An array of `test_t*` that details testing results for each element in
+     * tests.
      **/
     test_t** results;
     /**
-     * `outfile` is a FILE pointer which is where the results of the test will
+     * A FILE pointer which is where the results of the test will
      * be printed.
      *
      * This is stdout by default, but may be changed manually after the suite
@@ -367,7 +350,7 @@ typedef struct suite_t {
      **/
     FILE* outfile;
     /**
-     * `quiet` is a boolean flag indicating that results should not be printed
+     * A boolean flag indicating that results should not be printed
      * as the test suite runs; reporting can instead be done through creating
      * a stats structure after the suite finishes.
      **/
@@ -375,23 +358,22 @@ typedef struct suite_t {
 } suite_t;
 
 /**
- * `suite_new()` creates and returns a new test suite. Must be freed by
- * `suite_del()`.
+ * Creates and initializes a new test suite. Must be freed by `suite_del()`.
  *
  * @return A pointer to a fully intialized `suite_t` structure.
+ * @see suite_del
  **/
 suite_t* suite_new();
 
 /**
- * `suite_reset()` resets a `suite_t` to its initial state, as if it were
- * never run.
+ * Resets a `suite_t` to its initial state, as if it were never run.
  *
  * @param s - a pointer to a `suite_t` test suite to be reset
  **/
 void suite_reset(suite_t* s);
 
 /**
- * `suite_del()` frees memory allocated to a test suite.
+ * Frees memory allocated to a `suite_t`.
  *
  * @param s - a pointer to a `suite_t` test suite that is to be destroyed
  * @return EXIT_SUCCESS if successful, EXIT_FAILURE otherwise
@@ -399,14 +381,15 @@ void suite_reset(suite_t* s);
 int suite_del(suite_t* s);
 
 /**
- * `suite_done()` marks all the suite as having finished all tests.
+ * Marks the suite as having finished all tests. Not to be called explicitly.
+ * @private
  *
  * @param s - a pointer to the `suite_t` to mark finished
  **/
 void suite_done(suite_t* s);
 
 /**
- * `suite_add()` adds n `runner_t` structs to the suite.
+ * Adds n `runner_t` structs to the suite.
  *
  * @param s   - the suite to which test runners should be added
  * @param n   - the number of test runners that follow
@@ -415,7 +398,7 @@ void suite_done(suite_t* s);
 void suite_add(suite_t* s, int n, ...);
 
 /**
- * `suite_add_test()` adds a single `runner_t` to the suite.
+ * Adds a single `runner_t` to the suite.
  *
  * @param s - the suite to which the test runner should be added
  * @param r - the runner to add to the suite
@@ -424,7 +407,7 @@ void suite_add(suite_t* s, int n, ...);
 int suite_add_test(suite_t* s, runner_t* r);
 
 /**
- * `suite_run()` runs all tests in the test array.
+ * Runs all tests in the suite.
  *
  * @param s              - the test suite to run
  * @param fatal_failures - true indicates that the suite should abort
@@ -435,7 +418,8 @@ int suite_add_test(suite_t* s, runner_t* r);
 int suite_run(suite_t* s, bool fatal_failures);
 
 /**
- * `suite_next()` runs the next test in the suite.
+ * Runs the next test in the suite.
+ * @private
  *
  * @param s              - the test suite to run
  * @param fatal_failures - true indicates that the suite should abort
@@ -450,18 +434,14 @@ int suite_next(suite_t* s, bool fatal_failures);
  * indicates if the test passed.
  **/
 typedef struct tdd_result_t {
-    /**
-     * `name` is the name of the test that produced this result.
-     **/
+    /** The name of the test that produced this result. **/
     char* name;
-    /**
-     * `ok` indicates if the test that produced this result was successful.
-     **/
+    /** Indicates if the test that produced this result was successful. **/
     bool ok;
 } tdd_result_t;
 
 /**
- * `tdd_result_new()` creates and returns a pointer to a new `tdd_result_t`.
+ * Creates and initializes a pointer to a new `tdd_result_t`.
  * Must be freed with `tdd_result_del()`.
  * @private
  * @internal
@@ -471,7 +451,7 @@ typedef struct tdd_result_t {
 tdd_result_t* tdd_result_new(char* name, bool ok);
 
 /**
- * `tdd_result_del()` frees memory allocated to a `tdd_result_t` struct.
+ * Frees memory allocated to a `tdd_result_t` struct.
  * @private
  * @internal
  *
@@ -485,41 +465,29 @@ int tdd_result_del(tdd_result_t* result);
  **/
 typedef struct suite_stats_t {
     /**
-     * `test_run` is an array of tdd_result_t containing the results of the
-     * tests that ran in the suite.
+     * An array of `tdd_result_t` containing the results of the tests that ran
+     * in the suite.
      **/
     tdd_result_t** tests_run;
-    /**
-     * `n_tests` is the total number of tests in the suite.
-     **/
+    /** The total number of tests in the suite. **/
     int n_tests;
-    /**
-     * `n_error` is the total number of errors in the suite.
-     **/
+    /** The total number of errors in the suite. **/
     int n_error;
-    /**
-     * `n_fail` is the total number of failures in the suite.
-     **/
+    /** The total number of failures in the suite. **/
     int n_fail;
     /**
-     * `n_ran` is the total number of tests that ran in the suite. If this
-     * count differs from `n_tests`, then some tests were skipped.
+     * The total number of tests that ran in the suite. If this count differs
+     * from `n_tests`, then some tests were skipped.
      **/
     int n_ran;
-    /**
-     * `success_rate` is the percent rate of successful tests in the suite.
-     **/
+    /** The percent rate of successful tests in the suite. **/
     double success_rate;
-    /**
-     * `fatal_failures` is an indication that the suite ran with fatal
-     * failures enabled.
-     */
+    /** Indicates that the suite ran with fatal failures enabled. **/
     bool fatal_failures;
 } suite_stats_t;
 
 /**
- * `suite_get_stats()` returns a `stats_t*` detailing the results of the
- * testing.
+ * Returns a `stats_t*` detailing the results of the testing.
  *
  * @param s - the suite from which to allocate statistics
  * @return heap allocated suite_stats_t structure
@@ -527,8 +495,7 @@ typedef struct suite_stats_t {
 suite_stats_t* suite_get_stats(suite_t* s);
 
 /**
- * `suite_stats_del()` frees memory allocated to a `stats_t*` returned by
- * `suite_get_stats()`
+ * Frees memory allocated to a `stats_t*` returned by `suite_get_stats()`
  *
  * @param stats - pointer to the suite_stats_t to free
  * @return EXIT_SUCCESS if successful, EXIT_FAILURE otherwise
