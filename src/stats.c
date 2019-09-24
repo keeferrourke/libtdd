@@ -70,14 +70,14 @@ char* suite_fmtstats(suite_stats_t* stats) {
 #define FAILS "Failed %d of %d tests. (Fatal failures: %s)"
 #define ERROR "Errors during testing: %d"
 #define SUCCESS "Success rate: %0.2lf"
-    /* summary stats */
+    /* Allocate summary stats. */
     char* s = calloc(strlen(TESTS FAILS ERROR) + 50, sizeof(char));
     sprintf(s, TESTS "\n" FAILS "\n" ERROR "\n" SUCCESS "\n\n", stats->n_ran,
             stats->n_tests, stats->n_fail, stats->n_tests,
             stats->fatal_failures ? "true" : "false", stats->n_error,
             stats->success_rate);
 
-    /* at-a-glance results of each test */
+    /* Create at-a-glance results of each test. */
     int   each_cap = 50;
     int   each_len = 0;
     char* each     = calloc(50, sizeof(char));

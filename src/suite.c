@@ -75,10 +75,10 @@ void suite_done(suite_t* s) {
 void suite_add(suite_t* s, int n, ...) {
     if (s == NULL) return;
 
-    /* save old index to perform update */
+    /* Save old index to perform update. */
     int old_index = s->n_tests;
 
-    /* update the test count and realloc test and result arrays */
+    /* Update the test count and realloc test and result arrays. */
     s->n_tests += n;
     runner_t** tmp_tests = realloc(s->tests, sizeof(runner_t*) * s->n_tests);
     if (!tmp_tests) {
@@ -94,7 +94,7 @@ void suite_add(suite_t* s, int n, ...) {
     }
     s->results = tmp_results;
 
-    /* add tests from the va_list */
+    /* Add tests from the va_list. */
     va_list ap;
     va_start(ap, n);
     for (int i = old_index; i < s->n_tests; i++) {
@@ -110,7 +110,7 @@ int suite_add_test(suite_t* s, runner_t* r) {
 
     s->n_tests++;
 
-    /* reallocate array and add new runner_t */
+    /* Reallocate array and add new runner_t. */
     runner_t** tmp_tests = realloc(s->tests, sizeof(runner_t*) * s->n_tests);
     if (tmp_tests == NULL) {
         if (s->tests != NULL) {
@@ -122,7 +122,7 @@ int suite_add_test(suite_t* s, runner_t* r) {
     s->tests                 = tmp_tests;
     s->tests[s->n_tests - 1] = r;
 
-    /* grow results array with the tests */
+    /* Grow results array with the tests. */
     test_t** tmp_results = realloc(s->results, sizeof(test_t*) * s->n_tests);
     if (tmp_results == NULL) {
         if (s->results != NULL) {
@@ -150,11 +150,10 @@ int suite_run(suite_t* s, bool fatal_failures) {
     return EXIT_SUCCESS;
 }
 
-/* TODO: factor this so that results may be printed to arbitrary files */
 int suite_next(suite_t* s, bool fatal_failures) {
     if (s == NULL) return EXIT_FAILURE;
 
-    /* set up test */
+    /* Set up test. */
     runner_t* test = s->tests[s->test_index];
     test_t*   t    = tdd_test_new(test->name);
 
@@ -174,7 +173,7 @@ int suite_next(suite_t* s, bool fatal_failures) {
         return EXIT_FAILURE;
     }
 
-    /* run test */
+    /* Run test, possibly with bench marking. */
     if (bench) {
         test_timer_start(t);
     }
@@ -196,7 +195,7 @@ int suite_next(suite_t* s, bool fatal_failures) {
     if (crash_count != tdd_sigsegv_caught) {
         t->failed = true;
         s->n_segv++;
-        char* segv_msg = "encountered segmentation fault";
+        char* segv_msg = "Encountered segmentation fault";
         if (t->fail_msg != NULL) {
             free(t->fail_msg);
         }
@@ -204,10 +203,10 @@ int suite_next(suite_t* s, bool fatal_failures) {
         strncpy(t->fail_msg, segv_msg, strlen(segv_msg));
     }
 
-    /* keep record of test results */
+    /* Keep record of test results. */
     s->results[s->test_index++] = t;
 
-    /* print test results */
+    /* Print test results. */
     FILE* f    = s->outfile;
     int   left = (s->n_tests) - (s->test_index + 1);
     char* res =
@@ -223,7 +222,7 @@ int suite_next(suite_t* s, bool fatal_failures) {
         __print_desc(f, t->fail_msg);
         fprintf(f, "\n");
         if (fatal_failures != 0) {
-            printf("aborted with %d tests remaining.\n", left);
+            printf("Aborted with %d tests remaining.\n", left);
             ret = EXIT_FAILURE;
         }
     } else if (t->err != 0) {
@@ -234,7 +233,7 @@ int suite_next(suite_t* s, bool fatal_failures) {
         fprintf(f, "\n");
         char* errstr = calloc(64, sizeof(char));
         __INDENT(f, 6);
-        sprintf(errstr, "encountered %d errors.", t->err);
+        sprintf(errstr, "Encountered %d errors.", t->err);
         __print_warning(f, errstr);
         free(errstr);
         fprintf(f, "\n");
@@ -254,7 +253,7 @@ int suite_next(suite_t* s, bool fatal_failures) {
     }
     free(res);
 
-    /* print benchmarking info */
+    /* Print benchmarking info. */
     if (bench) {
         struct timespec tdiff = __timespec_minus(t->end, t->start);
 
